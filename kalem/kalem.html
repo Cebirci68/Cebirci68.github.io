@@ -1,1 +1,2272 @@
-test
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cebirci Kalem v3.61 Final </title>
+    <link rel="icon" type="image/x-icon" href="simge.ico">
+    
+    <!-- PWA Eklentileri -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#333333">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cebirci Kalem">
+</head>
+<body style="margin:0; padding:0; overflow:hidden; background-color:#333;">
+
+<div id="cebirci-app-root" style="display:none;">
+    
+    <style>
+        /* --- TEMEL AYARLAR --- */
+        * { -webkit-touch-callout: none !important; box-sizing: border-box; }
+        html, body { overflow: hidden !important; margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; background: #333 !important; touch-action: none !important; }
+        #cebirci-app-root {
+            position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
+            background-color: #525659 !important; z-index: 1000 !important;
+            display: flex !important; flex-direction: column !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none; user-select: none; touch-action: none;
+        }
+        :root { --active-color: #007bff; --bg-panel: #f4f6f8; --bg-header: #e1e4e8; --text-color: #2c3e50; --border-color: #ccc;} 
+        .z-overlay { z-index: 5000 !important; } .z-island  { z-index: 6000 !important; } .z-popup   { z-index: 7000 !important; } .z-loading { z-index: 8000 !important; }
+
+        #floating-island {
+            position: fixed; top: 20px; left: 20px; background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px;
+            display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.25); touch-action: none; transition: opacity 0.3s ease, transform 0.2s ease; z-index: 6000 !important; width: auto;
+        }
+        #floating-island.collapsed { width: auto !important; height: auto !important; background-color: transparent !important; border: none !important; box-shadow: none !important; }
+        #floating-island.collapsed .island-grid, #floating-island.collapsed .header-text, #floating-island.collapsed #fullscreen-text-btn { display: none !important; }
+        #floating-island.collapsed .island-header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border: 2px solid #3498db; border-radius: 50px !important; padding: 4px !important; box-shadow: 0 5px 20px rgba(0,0,0,0.3); justify-content: space-between; gap: 6px; }
+        #floating-island.collapsed #collapse-btn { display: flex !important; }
+        
+        .island-header { background-color: var(--bg-header); color: var(--text-color); padding: 4px 6px; font-size: 14px; font-weight: 700; text-align: left; border-top-left-radius: 12px; border-top-right-radius: 12px; cursor: move; border-bottom: 1px solid #d1d5db; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 160px; touch-action: none; }
+        .header-content { display: flex; align-items: center; gap: 5px; } .header-content svg { width: 40px; height: 40px; display: block; }
+        .island-grid { display: grid; padding: 5px; gap: 4px; grid-template-columns: repeat(3, 1fr); }
+        #floating-island.horizontal-layout .island-grid { grid-template-rows: repeat(3, 1fr); grid-auto-flow: column; }
+        #floating-island.horizontal-layout { flex-direction: row; align-items: stretch; }
+        #floating-island.horizontal-layout .island-header { writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 4px; border-bottom: none; border-right: 1px solid #d1d5db; border-radius: 0 12px 12px 0; border-top-left-radius: 0; border-top-right-radius: 0; flex-direction: row; gap: 10px; min-width: unset; justify-content: space-between; }
+        #floating-island.horizontal-layout.collapsed .island-header { writing-mode: horizontal-tb !important; transform: none !important; border-radius: 50px !important; flex-direction: row !important; padding: 4px !important; }
+        #floating-island.horizontal-layout .header-content svg { transform: rotate(90deg); } #floating-island.horizontal-layout.collapsed .header-content svg { transform: none !important; }
+        #collapse-btn svg { transition: transform 0.2s ease; transform: rotate(270deg); } #floating-island.collapsed #collapse-btn svg { transform: rotate(90deg); }
+
+        #fullscreen-text-btn {
+            font-size: 10px; color: #4b5563; text-align: center; cursor: pointer;
+            padding: 4px 0 6px 0; border-top: 1px solid #d1d5db; margin-top: 0px; width: 100%;
+            background: transparent; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+            user-select: none; font-weight: 600;
+        }
+        #fullscreen-text-btn:hover { color: #000; background: rgba(0,0,0,0.05); }
+        #floating-island.horizontal-layout #fullscreen-text-btn {
+            border-top: none; border-left: 1px solid #d1d5db;
+            width: auto; padding: 0 6px; writing-mode: vertical-rl; transform: rotate(180deg);
+            border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+            border-top-left-radius: 12px; border-bottom-left-radius: 12px; 
+        }
+
+        .tool-btn { width: 60px; height: 55px; border: 2px solid transparent; border-radius: 8px; background-color: transparent; color: #4b5563; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; padding: 0px; }
+        .tool-btn:hover { background-color: rgba(0,0,0,0.06); color: #111; } .tool-btn:active { transform: scale(0.96); }
+        .tool-btn.active { background-color: var(--active-color) !important; color: white !important; box-shadow: 0 2px 5px rgba(0,123,255,0.3); }
+        .tool-btn.color-selected { background-color: rgba(0,0,0,0.05); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
+        .btn-icon { margin-bottom: 1px; margin-top: 2px; } .btn-icon svg { width: 28px; height: 28px; fill: currentColor; }
+        .stroke-icon { fill: none !important; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .btn-text { font-size: 9px; font-weight: 600; text-align: center; line-height: 1; white-space: nowrap; margin-bottom: 2px; }
+        .quick-color-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); margin-bottom: 1px; margin-top:2px;}
+        @media (max-width: 600px) { .btn-text { display: none !important; } .tool-btn { width: 44px !important; height: 44px !important; } .btn-icon { margin: 0 !important; display:flex; align-items:center; justify-content:center; height: 100%;} .quick-color-dot { margin: 0 !important; } .island-header { min-width: unset !important; padding: 4px 8px !important; } .header-text { font-size: 13px; } }
+
+        .popup-menu { display: none; position: fixed; background: #ffffff; border: 1px solid #ccc; border-radius: 8px; padding: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 7000; } .popup-menu.show { display: flex; }
+        #size-menu { gap: 5px; align-items: center; background: #fff; padding: 5px 10px; border-radius: 20px; border:1px solid #ccc; }
+        .size-btn { width: 30px; height: 30px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 50%; font-weight: bold; cursor: pointer; display:flex; align-items:center; justify-content:center;} .size-btn:hover { background: #e0e0e0; }
+        .size-display { width: 30px; text-align: center; color: #333; font-weight: bold; font-size: 14px; }
+        .shape-grid-layout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .tip-grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .menu-item { width: 40px; height: 40px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color:#333; } .menu-item:hover { background: #e2e6ea; border-color: #ced4da; } .menu-item svg { width:20px; height:20px; fill:currentColor; }
+        
+        .menu-item-text { padding: 8px 15px; cursor: pointer; font-size: 14px; color: #333; border-bottom: 1px solid #eee; white-space: nowrap; }
+        .menu-item-text:last-child { border-bottom: none; }
+        .menu-item-text:hover { background-color: #f0f0f0; color: #007bff; }
+
+        .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.1s; } .swatch:hover { transform: scale(1.1); border-color: #000; }
+
+        #canvas-container { width: 100%; height: 100%; background: #525659; position: relative; touch-action: none; cursor: default; }
+        #world-container { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform; }
+        .page-wrapper { position: absolute; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transform-origin: 0 0; }
+        .draw-layer { width: 100% !important; height: 100% !important; position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
+        .pdf-content { width: 100% !important; height: 100% !important; position: absolute; top: 0; left: 0; pointer-events: none !important; user-select: none !important; -webkit-user-drag: none !important; }
+        .temp-draw-layer { width: 100% !important; height: 100% !important; position: absolute; top: 0; left: 0; z-index: 3; pointer-events: none; }
+        .hand-mode #canvas-container { cursor: grab; } .hand-mode #canvas-container:active { cursor: grabbing; } .scissors-mode #canvas-container { cursor: crosshair; }
+        #selection-box { position: fixed; display: none; border: 2px dashed #e74c3c; background: rgba(231,76,60,0.3); z-index: 7500 !important; pointer-events: none; }
+        
+        #bottom-nav-strip { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); backdrop-filter: blur(8px); border-radius: 12px; padding: 6px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); z-index: 6000 !important; border: 1px solid rgba(255,255,255,0.1); transition: opacity 0.3s ease; }
+        .nav-btn { width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.1); border: none; color: #eee; cursor: pointer; display:flex; align-items:center; justify-content:center; } .nav-btn:hover { background: rgba(255,255,255,0.2); }
+        .page-display { color: #fff; font-weight: bold; font-size: 14px; text-align: center; } .page-display input { background: transparent; border: none; color: #fff; width: 30px; text-align: center; font-weight: bold; font-size: 15px; outline: none; }
+        .page-display input::-webkit-outer-spin-button, .page-display input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .page-display input[type=number] { -moz-appearance: textfield; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 8000; }
+        .modal-box { background: #fff; width: 90%; max-width: 400px; padding: 20px; border-radius: 8px; color: #333; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .modal-header { font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 18px; }
+        .history-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        #loading-msg { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 8px; z-index: 9000; }
+        .about-logo { width: 64px; height: 64px; fill: #34495e; display: block; margin: 0 auto 10px; }
+        .btn-update-check { display: block; background-color: #27ae60; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; width: 100%; box-sizing: border-box; cursor: pointer; border: none; text-align: center; }
+
+        #question-mode-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; overflow: hidden; z-index: 5500; }
+        .q-header-btn { position: fixed; top: 15px; width: 44px; height: 44px; border: 3px solid #fff; border-radius: 50%; cursor: pointer; z-index: 10000 !important; pointer-events: auto !important; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.2s ease; }
+        .q-header-btn:active { transform: scale(0.9); }
+        #q-close-btn { left: calc(50% - 30px); background: #c0392b; color: #fff; } #q-download-btn { left: calc(50% + 30px); background: #007bff; color: #fff; }
+        .q-header-btn svg { width: 24px; height: 24px; fill: white; }
+        #q-canvas { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; position: relative; z-index: 1; }
+
+        #toggle-toolbar-btn { position: fixed; opacity: 0; pointer-events: none; width: 50px; height: 50px; background: transparent; border: none; cursor: pointer; z-index: 7500; touch-action: none; justify-content: center; align-items: center; display: flex; transition: opacity 0.3s ease; }
+        #toggle-toolbar-btn svg { width: 100%; height: 100%; drop-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+
+        body.distraction-free #floating-island, body.distraction-free #bottom-nav-strip { opacity: 0 !important; pointer-events: none !important; }
+        body.distraction-free #toggle-toolbar-btn { opacity: 1 !important; pointer-events: auto !important; }
+        #toast-msg { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #27ae60; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 10001; left: 50%; bottom: 30px; font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
+        #toast-msg.show { visibility: visible; opacity: 1; bottom: 50px; }
+    </style>
+
+    <div id="loading-msg">Yükleniyor...</div>
+	<div id="toast-msg">Dosya İndirildi!</div>
+
+    <div id="toggle-toolbar-btn" title="Araç Çubuğunu Göster">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#e6e6e6"/><path d="M8 12l4-4 4 4M8 16l4-4 4 4" stroke="#ad0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div id="floating-island" class="vertical-layout">
+        <div class="island-header" id="island-drag-area">
+            <div class="header-content">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                  <defs><filter id="blueGlowHeader" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" /></filter></defs>
+                  <g transform="translate(20, 0)"> <path d="M 380 140 A 160 160 0 1 0 380 372" fill="none" stroke="#FFFFFF" stroke-width="100" stroke-linecap="butt" filter="url(#blueGlowHeader)" opacity="0.8" /> <path d="M 380 140 A 160 160 0 1 0 380 372" fill="none" stroke="#1E293B" stroke-width="100" stroke-linecap="butt" /> </g>
+                  <g transform="translate(256, 256) rotate(-45) scale(2.8) translate(0, 70)"> <g stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="#FFFFFF"> <polygon points="0,0 -6,-15 6,-15"/> <polygon points="-6,-15 6,-15 16,-35 -16,-35"/> <rect x="-16" y="-115" width="32" height="80"/> <rect x="-16" y="-130" width="32" height="15"/> <rect x="-16" y="-140" width="32" height="10"/> </g> <g stroke="#000" stroke-width="2" stroke-linejoin="miter"> <polygon points="0,0 -6,-15 6,-15" fill="#8b0000" /> <polygon points="-6,-15 6,-15 16,-35 -16,-35" fill="#f5cba7" /> <rect x="-16" y="-115" width="32" height="80" fill="#3498db" /> <line x1="-5" y1="-115" x2="-5" y2="-35" /> <line x1="5" y1="-115" x2="5" y2="-35" /> <rect x="-16" y="-130" width="32" height="15" fill="#bdc3c7" /> <rect x="-16" y="-140" width="32" height="10" fill="#e74c3c" /> </g> </g>
+                </svg>
+                <div class="header-text">Cebirci Kalem</div>
+            </div>
+            <div id="collapse-btn" onpointerdown="toggleIslandCollapse(event)" title="Menüyü Küçült">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;"><path d="M5 4L13 12L5 20" stroke="#c70000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 4L19 12L11 20" stroke="#c70000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</div>
+        </div>
+        
+        <div class="island-grid">
+            <button class="tool-btn" onclick="toggleIslandRotation()" title="Döndür">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z"/></svg></div>
+                <div class="btn-text">Döndür</div>
+            </button>
+            <button class="tool-btn" onclick="document.getElementById('file-input').click()" title="Dosya Aç">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg></div>
+                <div class="btn-text">Aç</div>
+			</button>
+            
+            <button class="tool-btn" onclick="togglePopup(event, 'new-file-menu')" title="Yeni Sayfa">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>
+                <div class="btn-text">Yeni</div>
+            </button>
+
+            <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')" title="Kalem">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>
+                <div class="btn-text">Kalem</div>
+            </button>
+            <button class="tool-btn" id="btn-highlight" onclick="setTool('highlight')" title="Fosforlu">
+                <div class="btn-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.5 2.5L21.5 5.5L12 15H9V12L18.5 2.5ZM7 14H11V18H7V14ZM19 19V21H5V19H19Z" fill="#000000" stroke="#000000" stroke-width="0.5"/></svg>
+                </div>
+                <div class="btn-text">Fosforlu</div>
+            </button>
+            <button class="tool-btn" id="btn-tip-main" onclick="togglePopup(event, 'tip-menu')" title="Uç Ayarları">
+                <div class="btn-icon" id="current-tip-icon">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>
+                </div>
+                <div class="btn-text">Uç</div>
+            </button>
+
+            <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')" title="Silgi">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M15.07 3.99L20.75 9.83L17.05 13.53L13.07 17.5H21V19H7.93L4 15.06L15.07 3.99ZM10.95 17.5L15.46 12.99L11.82 9.36L6.12 15.06L8.55 17.5H10.95Z" fill="currentColor"/></svg></div>
+                <div class="btn-text">Silgi</div>
+            </button>
+            <button class="tool-btn" id="btn-color-main" onclick="togglePopup(event, 'color-palette')" title="Renk Paleti">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+                <div class="btn-text">Renk</div>
+            </button>
+
+            <button class="tool-btn" onclick="togglePopup(event, 'size-menu')" title="Boyut">
+                <div class="btn-icon" id="size-button-display"
+                     style="font-size:14px; font-weight:bold; line-height:1;">
+                    3
+                </div>
+                <div class="btn-text">Boyut</div>
+            </button>
+
+            <button class="tool-btn" id="btn-hand" onclick="setTool('hand')" title="El">
+                <div class="btn-icon">
+                    <svg fill="currentColor" viewBox="0 0 56 56"><path d="M 25.1289 53.5117 C 33.3789 53.5117 39.1680 49.0352 42.2851 40.2461 L 46.4102 28.6445 C 47.4414 25.7149 46.5039 23.3008 44.0664 22.4102 C 41.8867 21.6133 39.7305 22.5508 38.6992 24.9649 L 37.1758 28.7149 C 37.1289 28.8086 37.0586 28.8789 36.9649 28.8789 C 36.8476 28.8789 36.8008 28.7852 36.8008 28.6680 L 36.8008 9.8711 C 36.8008 7.1289 35.0898 5.4180 32.4649 5.4180 C 31.5039 5.4180 30.6367 5.7461 29.9805 6.3555 C 29.6758 3.9649 28.1289 2.4883 25.8086 2.4883 C 23.5351 2.4883 21.9414 4.0117 21.5898 6.3086 C 21.0039 5.7227 20.1602 5.4180 19.3164 5.4180 C 16.8789 5.4180 15.2617 7.1055 15.2617 9.7071 L 15.2617 12.3086 C 14.6289 11.6524 13.6914 11.3008 12.6836 11.3008 C 10.2461 11.3008 8.5586 13.1055 8.5586 15.7305 L 8.5586 35.8633 C 8.5586 46.8320 15.2149 53.5117 25.1289 53.5117 Z M 25.0117 50.2539 C 16.7149 50.2539 11.6524 44.9336 11.6524 35.4883 L 11.6524 16.0586 C 11.6524 15.0742 12.2851 14.3711 13.2695 14.3711 C 14.2305 14.3711 14.9336 15.0742 14.9336 16.0586 L 14.9336 28.0352 C 14.9336 28.9024 15.6367 29.4883 16.3867 29.4883 C 17.1836 29.4883 17.9102 28.9024 17.9102 28.0352 L 17.9102 10.1289 C 17.9102 9.1211 18.5430 8.4414 19.5039 8.4414 C 20.4883 8.4414 21.1680 9.1211 21.1680 10.1289 L 21.1680 26.8398 C 21.1680 27.7071 21.8711 28.2930 22.6445 28.2930 C 23.4414 28.2930 24.1680 27.7071 24.1680 26.8398 L 24.1680 7.2227 C 24.1680 6.2383 24.8242 5.5117 25.8086 5.5117 C 26.7461 5.5117 27.4258 6.2383 27.4258 7.2227 L 27.4258 26.8398 C 27.4258 27.6602 28.0820 28.2930 28.9024 28.2930 C 29.6992 28.2930 30.4024 27.6602 30.4024 26.8398 L 30.4024 10.1289 C 30.4024 9.1211 31.0820 8.4414 32.0430 8.4414 C 33.0273 8.4414 33.6836 9.1211 33.6836 10.1289 L 33.6836 33.1914 C 33.6836 34.2695 34.3633 35.0430 35.3476 35.0430 C 36.1914 35.0430 36.8945 34.6680 37.4336 33.4961 L 40.6211 26.3711 C 41.0430 25.3633 41.8867 24.8476 42.7539 25.1758 C 43.6914 25.5508 44.0195 26.4414 43.5742 27.6602 L 39.4258 39.2383 C 36.5664 47.2305 31.5508 50.2539 25.0117 50.2539 Z"></path></svg>
+                </div>
+                <div class="btn-text">El</div>
+			<button class="tool-btn" id="btn-scissors" onclick="setTool('scissors')" title="Makas" style="color: #8b0000;">
+				<div class="btn-icon">
+					<svg class="stroke-icon" viewBox="0 0 24 24">
+						<circle cx="6" cy="6" r="3"></circle>
+						<circle cx="6" cy="18" r="3"></circle>
+						<line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+						<line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+						<line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+					</svg>
+				</div>
+				<div class="btn-text">Makas</div>
+			</button>
+            <button class="tool-btn" id="btn-shape" onclick="togglePopup(event, 'shape-menu')" title="Şekiller">
+                <div class="btn-icon" id="shape-icon"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4" /></svg></div>
+            <div class="btn-text">Şekiller</div>
+            </button>
+
+            <button class="tool-btn" id="btn-color-blue" onclick="setQuickColor('#0066FF')" title="Mavi">
+                <div class="quick-color-dot" style="background-color: #0066FF;"></div>
+                <div class="btn-text">Mavi</div>
+            </button>
+            <button class="tool-btn" id="btn-color-red" onclick="setQuickColor('#FF0000')" title="Kırmızı">
+                <div class="quick-color-dot" style="background-color: #FF0000;"></div>
+                <div class="btn-text">Kırmızı</div>
+            </button>
+            <button class="tool-btn" id="btn-color-green" onclick="setQuickColor('#006400')" title="Yeşil">
+                <div class="quick-color-dot" style="background-color: #006400;"></div>
+                <div class="btn-text">Yeşil</div>
+            </button>
+
+            <button class="tool-btn" onclick="undoLastAction()" title="Geri Al" style="color:#e74c3c;">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.17 8 12.5 8z"/></svg></div>
+                <div class="btn-text">Geri Al</div>
+            </button>
+            <button class="tool-btn" onclick="clearCurrentPage()" title="Sayfayı Temizle" style="color:#e74c3c;">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
+                <div class="btn-text">Temizle</div>
+            </button>
+            <button class="tool-btn" onclick="resetAll()" title="Fabrika Ayarlarına Sıfırla" style="color: #4b5563;">
+                <div class="btn-icon">
+                    <svg viewBox="0 0 511.999 511.999"><path style="fill:#a82e38;" d="M382.795,358.347h-263.03c-7.958,0-14.411-6.452-14.411-14.411s6.453-14.411,14.411-14.411h263.029 c55.352,0,100.384-45.032,100.384-100.384v-25.501c0-55.352-45.032-100.384-100.384-100.384h-84.939v42.04h84.939 c7.958,0,14.411,6.452,14.411,14.411s-6.453,14.411-14.411,14.411h-99.349c-7.958,0-14.411-6.452-14.411-14.411V88.846 c0-7.959,6.453-14.411,14.411-14.411h99.349c71.243,0,129.205,57.961,129.205,129.205v25.501 C512,300.386,454.038,358.347,382.795,358.347z"></path><path style="fill:#a82e38;" d="M382.795,287.487H265.631c-7.958,0-14.411-6.452-14.411-14.411c0-7.959,6.453-14.411,14.411-14.411 h117.164c15.728,0,29.523-13.797,29.523-29.523v-25.501c0-7.959,6.453-14.411,14.411-14.411s14.411,6.452,14.411,14.411v25.501 C441.139,260.768,414.42,287.487,382.795,287.487z"></path><polygon style="fill:#F4B2B0;" points="200.171,423.152 14.411,307.407 200.171,191.663 "></polygon><path style="fill:#a82e38;" d="M200.171,437.563c-2.649,0-5.293-0.729-7.62-2.18L6.79,319.638C2.567,317.006,0,312.383,0,307.407 s2.567-9.599,6.79-12.23l185.761-115.744c4.441-2.77,10.038-2.909,14.615-0.369c4.578,2.541,7.416,7.364,7.416,12.599v231.49 c0,5.235-2.839,10.059-7.416,12.599C204.987,436.961,202.578,437.563,200.171,437.563z M41.661,307.407l144.1,89.786V217.62 L41.661,307.407z"></path></svg>
+                </div>
+                <div class="btn-text">Sıfırla</div>
+            </button>
+
+            <button class="tool-btn" onclick="autoSmartSave()" title="Kaydet">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg></div>
+                <div class="btn-text">Kaydet</div>
+            </button>
+            <button class="tool-btn" onclick="showHistory()" title="Geçmiş">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A9 9 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg></div>
+                <div class="btn-text">Geçmiş</div>
+            </button>
+            <button class="tool-btn" onclick="showAbout()" title="Hakkında">
+                <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>
+                <div class="btn-text">Hakkında</div>
+            </button>
+        </div>
+        <div id="fullscreen-text-btn" onclick="toggleFullScreen()">Tam Ekran</div>
+    </div>
+
+    <div id="new-file-menu" class="popup-menu z-popup" style="flex-direction: column; padding: 0; gap: 0;">
+         <div class="menu-item-text" onclick="createNewFile('blank')">Boş Sayfa</div>
+         <div class="menu-item-text" onclick="createNewFile('grid')">Kareli Sayfa</div>
+         <div class="menu-item-text" onclick="createNewFile('lined')">Çizgili Sayfa</div>
+    </div>
+
+    <div id="size-menu" class="popup-menu z-popup">
+        <button class="size-btn" onclick="stepSize(-1)">-</button>
+        <div class="size-display" id="menu-size-display">3</div>
+        <button class="size-btn" onclick="stepSize(1)">+</button>
+    </div>
+
+    <div id="tip-menu" class="popup-menu z-popup">
+        <div class="tip-grid-layout">
+            <div class="menu-item" onclick="setTip('round')" title="Yuvarlak Uç">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>
+            </div>
+            <div class="menu-item" onclick="setTip('chisel')" title="Kesik Uç">
+                <svg viewBox="0 0 24 24" transform="rotate(-30)"><rect x="8" y="4" width="8" height="16" rx="1" fill="currentColor"/></svg>
+            </div>
+            <div class="menu-item" onclick="setTip('square')" title="Kare Uç">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div id="shape-menu" class="popup-menu z-popup">
+        <div class="shape-grid-layout">
+            <div class="menu-item" onclick="setShapeTool('line')"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/></svg></div>
+            <div class="menu-item" onclick="setShapeTool('dashed')"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4" stroke-dasharray="4,4"/></svg></div>
+            <div class="menu-item" onclick="setShapeTool('arrowRight')"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="2" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></div>
+            <div class="menu-item" onclick="setShapeTool('arrowLeft')"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="22" y1="12" x2="4" y2="12" /><polyline points="10 6 4 12 10 18" /></svg></div>
+            <div class="menu-item" onclick="setShapeTool('arrowDouble')"><svg class="stroke-icon" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" /><polyline points="10 6 4 12 10 18" /><polyline points="14 6 20 12 14 18" /></svg></div>
+            <div class="menu-item" onclick="setShapeTool('rect')"><svg class="stroke-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+            <div class="menu-item" onclick="setShapeTool('circle')"><svg class="stroke-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="menu-item" onclick="setShapeTool('triangle')"><svg class="stroke-icon" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/></svg></div>
+        </div>
+    </div>
+
+    <div id="color-palette" class="popup-menu z-popup">
+        <div class="palette-grid">
+             <div class="swatch" style="background:#000000" onclick="handleColor('#000000')" title="Siyah"></div>
+             <div class="swatch" style="background:#FFFFFF" onclick="handleColor('#FFFFFF')" title="Beyaz"></div>
+             <div class="swatch" style="background:#FF0000" onclick="handleColor('#FF0000')" title="Canlı Kırmızı"></div>
+             <div class="swatch" style="background:#FF7F00" onclick="handleColor('#FF7F00')" title="Turuncu"></div>
+             <div class="swatch" style="background:#FFFF00" onclick="handleColor('#FFFF00')" title="Sarı"></div>
+             <div class="swatch" style="background:#00FF00" onclick="handleColor('#00FF00')" title="Lime Yeşili"></div>
+             <div class="swatch" style="background:#008000" onclick="handleColor('#008000')" title="Koyu Yeşil"></div>
+             <div class="swatch" style="background:#008080" onclick="handleColor('#008080')" title="Teal"></div>
+             <div class="swatch" style="background:#00FFFF" onclick="handleColor('#00FFFF')" title="Turkuaz"></div>
+             <div class="swatch" style="background:#00BFFF" onclick="handleColor('#00BFFF')" title="Gök Mavisi"></div>
+             <div class="swatch" style="background:#0000FF" onclick="handleColor('#0000FF')" title="Mavi"></div>
+             <div class="swatch" style="background:#000080" onclick="handleColor('#000080')" title="Lacivert"></div>
+             <div class="swatch" style="background:#800080" onclick="handleColor('#800080')" title="Mor"></div>
+             <div class="swatch" style="background:#FF00FF" onclick="handleColor('#FF00FF')" title="Magenta"></div>
+             <div class="swatch" style="background:#FF1493" onclick="handleColor('#FF1493')" title="Koyu Pembe"></div>
+             <div class="swatch" style="background:#8B4513" onclick="handleColor('#8B4513')" title="Kahverengi"></div>
+        </div>
+    </div>
+
+    <div id="bottom-nav-strip">
+        <button class="nav-btn" onclick="changePage(-1)">&#9664;</button>
+        <div class="page-display"><input type="number" id="page-input" value="1" onchange="goToPage()"></div>
+        <button class="nav-btn" onclick="changePage(1)">&#9654;</button>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.2);margin:0 5px;"></div>
+        <button class="nav-btn" onclick="stepZoom(-10)">-</button>
+        <div class="page-display" id="zoom-display" style="cursor:pointer" onclick="fitToWidth()">100%</div>
+        <button class="nav-btn" onclick="stepZoom(10)">+</button>
+    </div>
+
+    <div id="about-modal" class="modal-overlay z-popup">
+        <div class="modal-box" style="max-width: 300px;">
+            <div class="modal-header"><span>Hakkında</span><span style="cursor:pointer" onclick="document.getElementById('about-modal').style.display='none'">×</span></div>
+            <div style="text-align:center;">
+				<svg class="about-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+				  <defs><filter id="blueGlowAbout" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" /></filter></defs>
+				  <g transform="translate(20, 0)"><path d="M 380 140 A 160 160 0 1 0 380 372" fill="none" stroke="#FFFFFF" stroke-width="100" stroke-linecap="butt" filter="url(#blueGlowAbout)" opacity="0.8" /><path d="M 380 140 A 160 160 0 1 0 380 372" fill="none" stroke="#1E293B" stroke-width="100" stroke-linecap="butt" /></g>
+				  <g transform="translate(256, 256) rotate(-45) scale(2.8) translate(0, 70)"><g stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="#FFFFFF"><polygon points="0,0 -6,-15 6,-15"/><polygon points="-6,-15 6,-15 16,-35 -16,-35"/><rect x="-16" y="-115" width="32" height="80"/><rect x="-16" y="-130" width="32" height="15"/><rect x="-16" y="-140" width="32" height="10"/></g><g stroke="#000" stroke-width="2" stroke-linejoin="miter"><polygon points="0,0 -6,-15 6,-15" fill="#8b0000" /><polygon points="-6,-15 6,-15 16,-35 -16,-35" fill="#f5cba7" /><rect x="-16" y="-115" width="32" height="80" fill="#3498db" /><line x1="-5" y1="-115" x2="-5" y2="-35" /><line x1="5" y1="-115" x2="5" y2="-35" /><rect x="-16" y="-130" width="32" height="15" fill="#bdc3c7" /><rect x="-16" y="-140" width="32" height="10" fill="#e74c3c" /></g></g>
+				</svg>
+                <div style="font-size:22px; font-weight:bold; color:#2c3e50;">Cebirci Kalem</div>
+                <p>v3.61 </p>
+                <p>Hazırlayan: Gökhan AKÇAYIR</p>
+                <a href="https://cebirci.com.tr" target="_blank" style="color:#007bff; text-decoration:none;">www.cebirci.com.tr</a>
+                <br>
+                <button onclick="checkForUpdates(true)" class="btn-update-check">Güncellemeleri Denetle</button>
+                <button onclick="document.getElementById('legal-modal').style.display='flex'" class="btn-update-check" style="background-color: #d35400;">YASAL UYARI ve KULLANIM SÖZLEŞMESİ</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="legal-modal" class="modal-overlay z-popup">
+        <div class="modal-box" style="max-width: 800px;">
+            <div class="modal-header"><span>Yasal Uyarı ve Sözleşme</span><span style="cursor:pointer" onclick="document.getElementById('legal-modal').style.display='none'">×</span></div>
+            <div style="text-align:left; font-size:13px; line-height:1.4; white-space: pre-wrap; max-height:60vh; overflow-y:auto;">
+CEBİRCİ KALEM - KULLANIM VE GİZLİLİK SÖZLEŞMESİ
+Yazılım Sürümü: v3.61  Geliştirici: Gökhan AKÇAYIR / Cebirci.com.tr
+
+Bu yazılımı (Cebirci Kalem) kullanarak aşağıdaki şartları kabul etmiş sayılırsınız:
+
+1. Çalışma Prensibi ve Veri Gizliliği (ÖNEMLİ)
+Cebirci Kalem, tamamen tarayıcı tabanlı (offline-first) çalışan bir akıllı tahta uygulamasıdır.
+Sunucuya Veri Gitmez: Uygulamaya yüklediğiniz PDF dosyaları, resimler veya yaptığınız çizimler asla bizim sunucularımıza yüklenmez.
+Yerel İşlem: Tüm işlemler cihazınızın (Bilgisayar/Tablet) işlemcisi ve belleği kullanılarak yapılır.
+
+2. Veri Güvenliği ve Kaydetme Uyarısı
+Uygulama, çalışma verilerini tarayıcınızın yerel veritabanında (IndexedDB) tutar.
+Risk: Tarayıcı geçmişinizi veya "Site Verilerini/Çerezleri" temizlerseniz, uygulama içindeki kayıtlı çizimleriniz ve geçmiş dosyalarınız SİLİNEBİLİR.
+Tavsiye: Önemli çalışmalarınızı kaybetmemek için düzenli olarak "Kaydet (PDF İndir)" özelliğini kullanınız.
+
+3. Kullanım Hakları ve Telif
+Bu yazılım ÜCRETSİZ olarak sunulmaktadır.
+İzinler: Öğretmenler ve öğrenciler bu yazılımı sınıflarda veya derslerde kullanabilirler.
+Yasaklar: Bu yazılımın kaynak kodlarının kopyalanması,değiştirilmesi veya parayla satılması yasaktır.
+
+4. Sorumluluk Reddi
+Bu yazılım "olduğu gibi" sunulmaktadır. Veri kayıplarından Cebirci.com.tr sorumlu tutulamaz.
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" accept="application/pdf, image/*" style="display:none">
+    <div id="history-modal" class="modal-overlay z-popup"><div class="modal-box"><div class="modal-header"><span>Son Dosyalar</span><span style="cursor:pointer" onclick="document.getElementById('history-modal').style.display='none'">×</span></div><div id="history-list"></div></div></div>
+    
+    <div id="question-mode-overlay" class="z-overlay"> 
+		<button id="q-close-btn" class="q-header-btn" onclick="closeQuestionMode()" title="Kapat">
+			<svg viewBox="0 0 24 24">
+				<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+			</svg>
+		</button>
+        <button id="q-download-btn" class="q-header-btn" onclick="downloadQuestionImage()" title="İndir">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        </button> 
+        <canvas id="q-canvas"></canvas>
+    </div>
+    
+    <div id="selection-box"></div>
+
+    <div id="canvas-container">
+        <div id="world-container"></div>
+    </div>
+
+    <script>
+window.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, { passive: false });
+
+        (function() { 
+            var a = document.getElementById('cebirci-app-root'); 
+            function m() { 
+                if(document.body) { 
+                    document.body.appendChild(a); 
+                    a.style.display = 'flex'; 
+                    document.documentElement.style.overflow = 'hidden'; 
+                    document.body.style.overflow = 'hidden'; 
+                } else { 
+                    setTimeout(m, 50); 
+                } 
+            } 
+            m(); 
+        })();
+
+        const libReadyPromise = (async function() {
+            const LIBS = {
+                local: { pdf: 'pdf.min.js', worker: 'pdf.worker.min.js', jspdf: 'jspdf.umd.min.js' },
+                cdn: { pdf: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', worker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js', jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js' }
+            };
+            function loadScript(src) { 
+                return new Promise((resolve, reject) => { 
+                    const s = document.createElement('script'); 
+                    s.src = src; 
+                    s.onload = resolve; 
+                    s.onerror = reject; 
+                    document.head.appendChild(s); 
+                }); 
+            }
+            try { 
+                await loadScript(LIBS.local.pdf); 
+                await loadScript(LIBS.local.jspdf); 
+                if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.local.worker; 
+            } 
+            catch { 
+                try { 
+                    await loadScript(LIBS.cdn.pdf); 
+                    await loadScript(LIBS.cdn.jspdf); 
+                    if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.cdn.worker; 
+                } catch { 
+                    alert("Kütüphane Hatası"); 
+                } 
+            }
+        })();
+
+        let pdfDoc = null, currentTool = 'pen', currentShape = 'line', currentTip = 'round', isDrawing = false;
+        let startX, startY, lastX, lastY, lastMidX, lastMidY;
+        let pageStrokes = {}, currentStroke = null, fileHash = 'default', db;
+        let activeCanvas = null, activeCtx = null;
+        let tempCanvas = null, tempCtx = null; 
+        
+        let pz = { x: 0, y: 0, scale: 1 }, pzStart = { x: 0, y: 0, scale: 1, dist: 0 };
+        let isPinching = false, isPanning = false, lastPinchCenter = { x: 0, y: 0 };
+        let isSelecting = false, selectionStartX, selectionStartY;
+        
+        let isQuestionMode = false, qStrokes = [], qScale = 1, qPanX = 0, qPanY = 0, qBaseImage = null; 
+        let isQPinching = false, qPinchStartDist = 0, qPinchStartScale = 1, qPinchStartMid = {x:0, y:0}, qPinchStartPan = {x:0, y:0};
+
+        // --- BELLEK YÖNETİMİ DEĞİŞKENLERİ ---
+        let lastCaptureScale = 2.0;
+        let activePdfUrl = null; 
+
+        let qualityTimer = null; 
+        let pageObserver = null; 
+
+        let toolSettings = { 
+            pen:      { size: 3,  color: '#0066FF' }, 
+            highlight:{ size: 30, color: '#ffff00' }, 
+            eraser:   { size: 40, color: '#ffffff' }, 
+            hand:     { size: 0,  color: '#000000' }, 
+            shape:    { size: 3,  color: '#000000' }, 
+            scissors: { size: 0,  color: '#000000' } 
+        };
+
+        const BASE_RENDER_SCALE = 3.5; 
+        const TARGET_PDF_SCALE = 4;      
+        const MAX_PDF_PIXELS   = 16000000; 
+
+		const ZOOM_THICKNESS_POWER = 0.65; 
+		const ZOOM_THICKNESS_MULT  = 1.0; 
+
+		function worldSizeFromZoom(screenSize, zoom) {
+		  return (screenSize * ZOOM_THICKNESS_MULT) / Math.pow(zoom, ZOOM_THICKNESS_POWER);
+		}
+        const SCISSOR_OVERSAMPLE = 3;
+
+        const BLANK_PDF_DATA = "JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmogICUgcGFnZXMKPDwKICAvVHlwZSAvUGFnZXwKICAvTWVkaWFCb3ggWyAwIDAgNTk1LjI4IDg0MS44OSBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqICAlIHBhZ2UgMQo8PAogIC9UeXBlIC9QYWdlCiAgL1BhcmVudCAyIDAgUgo+PgplbmRvYmoKCnhyZWYKMCA0CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxMCAwMDAwMCBuIAowMDAwMDAwMDYwIDAwMDAwIG4gCjAwMDAwMDAxNTcgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDQKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKMjEwCiUlRU9GCg==";
+
+        const container = document.getElementById('canvas-container');
+        const worldContainer = document.getElementById('world-container');
+        const loadingMsg = document.getElementById('loading-msg');
+
+        window.onload = async function() {
+            makeDraggable(document.getElementById('floating-island'));
+            initFloatingButton();
+
+            try { await libReadyPromise; } catch(e) { return; }
+            await initDB(); 
+            initPointerEvents();
+            initQuestionTouchZoom();
+
+            loadGlobalSettings();
+            updateUIForCurrentColor();
+            updateSizeButtonDisplay();
+
+            if(window.innerWidth <= 600) {
+                const island = document.getElementById('floating-island');
+                island.classList.add('collapsed');
+                const bstrip = document.getElementById('bottom-nav-strip');
+                if (bstrip) bstrip.style.display = 'none';
+            }
+
+            const lastSessionFile = await getLastSessionFile();
+            if (lastSessionFile) {
+                fileHash = lastSessionFile.hash;
+                if(lastSessionFile.data && lastSessionFile.data.type && lastSessionFile.data.type.startsWith('image/')) {
+                    const file = new File([lastSessionFile.data], lastSessionFile.name || "resim.png", { type: lastSessionFile.data.type });
+                    convertImageToPDFAndLoad(file);
+                } else {
+                    const objectUrl = URL.createObjectURL(lastSessionFile.data);
+                    loadPDF(objectUrl, false); 
+                }
+            } else { 
+                loadDefaultPDF(); 
+            }
+
+            window.addEventListener('click', (e) => { 
+                if (!e.target.closest('.popup-menu') && !e.target.closest('.tool-btn')) 
+                    closeAllPopups(); 
+            });
+
+            window.addEventListener('resize', () => { 
+                if(isQuestionMode) {
+                    const qc = document.getElementById('q-canvas');
+                    qc.width  = window.innerWidth;
+                    qc.height = window.innerHeight;
+                    renderQuestionCanvas();
+                }
+                ensureIslandInViewport();
+            });
+            
+            document.addEventListener("fullscreenchange", updateFullScreenButtonText);
+            document.addEventListener("webkitfullscreenchange", updateFullScreenButtonText);
+            document.addEventListener("mozfullscreenchange", updateFullScreenButtonText);
+            document.addEventListener("msfullscreenchange", updateFullScreenButtonText);
+
+            window.addEventListener('orientationchange', () => {
+                setTimeout(ensureIslandInViewport, 300);
+            });
+
+            ensureIslandInViewport();
+
+            setTool('pen');
+        };
+
+        // --- GÜÇLÜ BELLEK TEMİZLEYİCİ ---
+        async function forceCleanup() {
+            worldContainer.innerHTML = '';
+            if (pdfDoc) {
+                try {
+                    await pdfDoc.cleanup(); 
+                    await pdfDoc.destroy(); 
+                } catch(e) { }
+                pdfDoc = null;
+            }
+            activeCanvas = null; activeCtx = null;
+            if(tempCanvas) { tempCanvas.remove(); tempCanvas = null; tempCtx = null; }
+        }
+
+        function makeDraggable(elm) {
+            const handle = document.getElementById("island-drag-area");
+            let startX, startY, initialLeft, initialTop;
+            let hasMoved = false;
+            let isTouchDragging = false;
+            function isTargetCollapseButton(target) { return target.closest('#collapse-btn') !== null; }
+
+            handle.onpointerdown = function(e) {
+                if (isTargetCollapseButton(e.target)) return; 
+                e.preventDefault(); 
+                if (handle.setPointerCapture) { try { handle.setPointerCapture(e.pointerId); } catch(_) {} }
+                startX = e.clientX; startY = e.clientY; initialLeft = elm.offsetLeft; initialTop  = elm.offsetTop;
+                elm.style.transition = 'none'; hasMoved = false;
+
+                handle.onpointermove = function(e) { 
+                    const dx = e.clientX - startX; const dy = e.clientY - startY; 
+                    if(Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+                    let newLeft = initialLeft + dx; let newTop  = initialTop  + dy;
+                    const maxLeft = window.innerWidth - elm.offsetWidth; const maxTop  = window.innerHeight - elm.offsetHeight;
+                    if(newLeft < 0) newLeft = 0; if(newLeft > maxLeft) newLeft = maxLeft;
+                    if(newTop < 0) newTop = 0; if(newTop > maxTop) newTop = maxTop;
+                    elm.style.left = newLeft + "px"; elm.style.top  = newTop  + "px"; 
+                };
+                handle.onpointerup = function(e) { 
+                    if (handle.releasePointerCapture) { try { handle.releasePointerCapture(e.pointerId); } catch(_) {} }
+                    handle.onpointermove = null; handle.onpointerup   = null; elm.style.transition = ''; saveGlobalSettings();
+                };
+            };
+
+            if (!window.PointerEvent) {
+                handle.addEventListener('touchstart', function(e) {
+                    if (isTargetCollapseButton(e.target)) return;
+                    if (!e.touches || !e.touches[0]) return;
+                    const t = e.touches[0];
+                    startX = t.clientX; startY = t.clientY; initialLeft = elm.offsetLeft; initialTop  = elm.offsetTop;
+                    elm.style.transition = 'none'; hasMoved = false; isTouchDragging = true;
+                }, { passive: false });
+
+                handle.addEventListener('touchmove', function(e) {
+                    if (!isTouchDragging) return;
+                    e.preventDefault();
+                    if (!e.touches || !e.touches[0]) return;
+                    const t = e.touches[0];
+                    const dx = t.clientX - startX; const dy = t.clientY - startY;
+                    if(Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+                    let newLeft = initialLeft + dx; let newTop  = initialTop  + dy;
+                    const maxLeft = window.innerWidth - elm.offsetWidth; const maxTop  = window.innerHeight - elm.offsetHeight;
+                    if(newLeft < 0) newLeft = 0; if(newLeft > maxLeft) newLeft = maxLeft;
+                    if(newTop < 0) newTop = 0; if(newTop > maxTop) newTop = maxTop;
+                    elm.style.left = newLeft + "px"; elm.style.top  = newTop  + "px"; 
+                }, { passive: false });
+
+                handle.addEventListener('touchend', function() { if (!isTouchDragging) return; isTouchDragging = false; elm.style.transition = ''; saveGlobalSettings(); });
+                handle.addEventListener('touchcancel', function() { if (!isTouchDragging) return; isTouchDragging = false; elm.style.transition = ''; });
+            }
+        }
+
+        function toggleIslandCollapse(e) {
+            if(e) e.stopPropagation(); 
+            const island = document.getElementById('floating-island');
+            const bottomStrip = document.getElementById('bottom-nav-strip');
+            const isCollapsed = island.classList.contains('collapsed');
+            closeAllPopups();
+            if (isCollapsed) { island.classList.remove('collapsed'); if (bottomStrip) bottomStrip.style.display = 'flex'; } 
+            else { island.classList.add('collapsed'); if (bottomStrip) bottomStrip.style.display = 'none'; }
+        }
+
+        function initFloatingButton() {
+            const btn = document.getElementById('toggle-toolbar-btn');
+            let startX, startY, initialLeft, initialTop, hasMoved = false;
+
+            btn.onpointerdown = function(e) {
+                e.preventDefault(); btn.setPointerCapture(e.pointerId);
+                startX = e.clientX; startY = e.clientY; initialLeft = btn.offsetLeft; initialTop  = btn.offsetTop; hasMoved = false;
+                btn.onpointermove = function(e) {
+                    const dx = e.clientX - startX; const dy = e.clientY - startY;
+                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved = true;
+                    let newLeft = initialLeft + dx; let newTop  = initialTop  + dy;
+                    const maxLeft = window.innerWidth - btn.offsetWidth; const maxTop  = window.innerHeight - btn.offsetHeight;
+                    if(newLeft < 0) newLeft = 0; if(newLeft > maxLeft) newLeft = maxLeft;
+                    if(newTop < 0) newTop = 0; if(newTop > maxTop) newTop = maxTop;
+                    btn.style.left = newLeft + "px"; btn.style.top  = newTop  + "px";
+                };
+                btn.onpointerup = function(e) {
+                    btn.releasePointerCapture(e.pointerId); btn.onpointermove = null; btn.onpointerup   = null;
+                    if (!hasMoved) {
+                        const island = document.getElementById('floating-island');
+                        const rect = btn.getBoundingClientRect();
+                        let newLeft = rect.left; let newTop  = rect.top;
+                        const maxLeft = window.innerWidth - island.offsetWidth; const maxTop  = window.innerHeight - island.offsetHeight;
+                        if (newLeft > maxLeft) newLeft = maxLeft; if (newTop  > maxTop)  newTop  = maxTop;
+                        if (newLeft < 0) newLeft = 0; if (newTop  < 0) newTop  = 0;
+                        island.style.left = newLeft + 'px'; island.style.top  = newTop  + 'px';
+                        document.body.classList.remove('distraction-free'); saveGlobalSettings();
+                    }
+                };
+            };
+        }
+
+        function toggleIslandRotation() {
+            const island = document.getElementById('floating-island');
+            if (island.classList.contains('collapsed')) return;
+            const isVertical = island.classList.contains('vertical-layout');
+            if (isVertical) { island.classList.remove('vertical-layout'); island.classList.add('horizontal-layout'); } 
+            else { island.classList.remove('horizontal-layout'); island.classList.add('vertical-layout'); }
+            closeAllPopups(); saveGlobalSettings();
+        }
+
+        function saveGlobalSettings() {
+            const island = document.getElementById('floating-island');
+            const data = { toolSettings: toolSettings, currentTool: currentTool, currentTip: currentTip, island: { top: island.style.top, left: island.style.left, isVertical: island.classList.contains('vertical-layout') } };
+            localStorage.setItem('Cebirci_v3_Global', JSON.stringify(data));
+        }
+
+        function loadGlobalSettings() {
+            try {
+                const data = JSON.parse(localStorage.getItem('Cebirci_v3_Global'));
+                if (data) {
+                    if (data.toolSettings) toolSettings = data.toolSettings;
+                    if (data.currentTool)  currentTool   = data.currentTool;
+                    if (data.currentTip) { currentTip = data.currentTip; setTip(currentTip); }
+                    if (data.island) {
+                        const island = document.getElementById('floating-island');
+                        if (data.island.top)  island.style.top  = data.island.top;
+                        if (data.island.left) island.style.left = data.island.left;
+                        if (data.island.isVertical === false) { island.classList.remove('vertical-layout'); island.classList.add('horizontal-layout'); }
+                    }
+                }
+            } catch (e) { }
+        }
+
+        function ensureIslandInViewport() {
+            const island = document.getElementById('floating-island');
+            if (!island) return;
+            const rect = island.getBoundingClientRect();
+            let left = rect.left; let top  = rect.top;
+            const iw = rect.width; const ih = rect.height; const margin = 10;
+            let maxLeft = window.innerWidth  - iw - margin; let maxTop  = window.innerHeight - ih - margin;
+            if (maxLeft < margin) { maxLeft = margin; left = margin; }
+            if (maxTop < margin) { maxTop = margin; top = margin; }
+            if (left < margin) left = margin; if (left > maxLeft) left = maxLeft;
+            if (top  < margin) top  = margin; if (top  > maxTop) top  = maxTop;
+            island.style.left = left + 'px'; island.style.top  = top  + 'px';
+            saveGlobalSettings();
+        }
+
+        function saveFileState() {
+            if (fileHash === 'default' || fileHash === 'blank') return;
+            const p = document.getElementById('page-input').value;
+            const state = { page: p, pz: pz };
+            localStorage.setItem('Cebirci_v3_State_' + fileHash, JSON.stringify(state));
+        }
+
+        function restoreFileState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('Cebirci_v3_State_' + fileHash));
+                if (saved) {
+                    if (saved.page) document.getElementById('page-input').value = saved.page;
+                    if (saved.pz)   pz = saved.pz;
+                    goToPage();
+                }
+            } catch (e) {}
+        }
+
+        window.togglePopup = (e, menuId) => {
+            e.stopPropagation(); 
+            const menu = document.getElementById(menuId); 
+            const isShown = menu.classList.contains('show'); 
+            closeAllPopups();
+            if (!isShown) { 
+                menu.classList.add('show'); 
+                const btnRect = e.currentTarget.getBoundingClientRect(); 
+                let top  = btnRect.top; let left = btnRect.right + 10;
+                if (left + menu.offsetWidth > window.innerWidth) left = btnRect.left - menu.offsetWidth - 10; 
+                if (left < 10) left = 10;
+                if (top + menu.offsetHeight > window.innerHeight) top = window.innerHeight - menu.offsetHeight - 10; 
+                menu.style.top  = top  + 'px'; menu.style.left = left + 'px'; 
+            }
+        };
+
+        function closeAllPopups() { document.querySelectorAll('.popup-menu').forEach(p => p.classList.remove('show')); }
+
+        window.setTool = (t) => {
+            currentTool = t;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            if(['pen','eraser','highlight','hand','scissors'].includes(t)) document.getElementById('btn-'+t).classList.add('active');
+            if(t === 'shape') document.getElementById('btn-shape').classList.add('active');
+            if(t === 'tip')   document.getElementById('btn-tip-main').classList.add('active');
+            document.body.className = ''; 
+            if(t === 'hand') document.body.classList.add('hand-mode'); else if(t === 'scissors') document.body.classList.add('scissors-mode');
+            const k = (t==='shape') ? 'shape' : (toolSettings[t] ? t : 'pen');
+            document.getElementById('menu-size-display').innerText = toolSettings[k].size;
+            updateSizeButtonDisplay();
+            if(t !== 'shape' && t !== 'tip') closeAllPopups();
+            if(window.innerWidth <= 600) {
+                if(t === 'pen' || t === 'eraser' || t === 'highlight' || t === 'hand' || t === 'scissors') {
+                    const island = document.getElementById('floating-island');
+                    if(!island.classList.contains('collapsed')) { setTimeout(() => { island.classList.add('collapsed'); const bottomStrip = document.getElementById('bottom-nav-strip'); if (bottomStrip) bottomStrip.style.display = 'none'; }, 150); }
+                }
+            }
+            saveGlobalSettings(); updateUIForCurrentColor();
+        };
+        
+        window.setShapeTool = (s) => { 
+            currentShape = s; setTool('shape'); 
+            const menuSvg = document.querySelector(`div[onclick="setShapeTool('${s}')"] svg`);
+            if(menuSvg) document.getElementById('shape-icon').innerHTML = menuSvg.outerHTML; 
+        };
+
+        window.setTip = (type) => {
+            currentTip = type;
+            if (type === 'chisel') toolSettings.pen.size = 5; else toolSettings.pen.size = 3;
+            document.getElementById('menu-size-display').innerText = toolSettings.pen.size;
+            updateSizeButtonDisplay();
+            const btnIcon = document.getElementById('current-tip-icon');
+            const menuSvg = document.querySelector(`div[onclick="setTip('${type}')"] svg`);
+            if(menuSvg) btnIcon.innerHTML = menuSvg.outerHTML;
+            closeAllPopups(); saveGlobalSettings();
+        };        
+
+        window.setQuickColor = (c) => { handleColor(c); };
+
+        window.handleColor = (c) => { 
+            toolSettings['pen'].color = c; toolSettings['highlight'].color = c; toolSettings['shape'].color = c;
+            closeAllPopups(); saveGlobalSettings(); updateUIForCurrentColor();
+        };
+
+        function updateUIForCurrentColor() {
+            const currentColor = toolSettings['pen'].color;
+            document.querySelectorAll('.tool-btn').forEach(b => {
+                b.classList.remove('color-selected');
+                if(b.id && b.id.startsWith('btn-color')) b.style.borderColor = 'transparent';
+            });
+            const btnBlue = document.getElementById('btn-color-blue'); const btnRed = document.getElementById('btn-color-red'); const btnGreen = document.getElementById('btn-color-green'); const btnMain = document.getElementById('btn-color-main');
+            let activeBtn = null;
+            if (currentColor.toUpperCase() === '#0066FF') activeBtn = btnBlue;
+            else if (currentColor.toUpperCase() === '#FF0000') activeBtn = btnRed;
+            else if (currentColor.toUpperCase() === '#006400') activeBtn = btnGreen; 
+            else activeBtn = btnMain;
+            if(activeBtn) { activeBtn.classList.add('color-selected'); activeBtn.style.borderColor = currentColor; }
+        }
+
+        function updateSizeButtonDisplay() {
+            const k = (currentTool === 'shape') ? 'shape' : (toolSettings[currentTool] ? currentTool : 'pen');
+            const el = document.getElementById('size-button-display');
+            if (el) el.innerText = toolSettings[k].size;
+        }
+
+        window.stepSize = (d) => { 
+            const k = (currentTool === 'shape') ? 'shape' : (toolSettings[currentTool] ? currentTool : 'pen'); 
+            let v = toolSettings[k].size + d; 
+            if(v<1) v=1; if(v>100) v=100; 
+            toolSettings[k].size = v; 
+            document.getElementById('menu-size-display').innerText = v;
+            updateSizeButtonDisplay(); saveGlobalSettings(); 
+        };
+
+        function updateTransform() { 
+            worldContainer.style.transform = `translate3d(${pz.x}px, ${pz.y}px, 0) scale(${pz.scale})`; 
+            document.getElementById('zoom-display').innerText = Math.round(pz.scale * 100) + '%';
+            if(qualityTimer) clearTimeout(qualityTimer);
+            qualityTimer = setTimeout(refreshQuality, 400); 
+            saveFileState();
+        }
+
+        function refreshQuality() {
+            const p = parseInt(document.getElementById('page-input').value);
+            const wrapper = document.getElementById('page-wrapper-' + p);
+            if (!wrapper) return;
+            const canvas = wrapper.querySelector('.draw-layer');
+            if (!canvas) return;
+            
+            let maxAllowedScale  = 4.0; let maxAllowedPixels = 16000000;
+            let idealScale = pz.scale * (window.devicePixelRatio || 1.5);
+            if (idealScale < BASE_RENDER_SCALE) idealScale = BASE_RENDER_SCALE; 
+            if(idealScale > maxAllowedScale)    idealScale = maxAllowedScale;
+
+            const w = parseFloat(wrapper.style.width); const h = parseFloat(wrapper.style.height);
+            const pixels = (w * idealScale) * (h * idealScale);
+            if (pixels > maxAllowedPixels) idealScale = Math.sqrt(maxAllowedPixels / (w * h)); 
+
+            const currentScale = parseFloat(canvas.dataset.renderScale || BASE_RENDER_SCALE);
+            if (Math.abs(idealScale - currentScale) < 0.2) return; 
+
+            canvas.width  = w * idealScale; canvas.height = h * idealScale; canvas.dataset.renderScale = idealScale;
+            const ctx = canvas.getContext('2d', { desynchronized: true, alpha: true }); 
+            ctx.scale(idealScale, idealScale);
+            if (pageStrokes[p]) redrawCanvas(ctx, pageStrokes[p]);
+        }
+
+        function getWorldCoordinates(clientX, clientY) { 
+            const rect = container.getBoundingClientRect(); 
+            return { x: (clientX - rect.left - pz.x) / pz.scale, y: (clientY - rect.top  - pz.y) / pz.scale }; 
+        }
+        
+        async function initDB() { 
+            return new Promise((resolve) => { 
+                const req = indexedDB.open('CebirciDB_v4', 1); 
+                req.onupgradeneeded = (e) => { 
+                    db = e.target.result; 
+                    if (!db.objectStoreNames.contains('files'))    db.createObjectStore('files'); 
+                    if (!db.objectStoreNames.contains('drawings')) db.createObjectStore('drawings'); 
+                    if (!db.objectStoreNames.contains('history'))  db.createObjectStore('history', { keyPath: "hash" }); 
+                }; 
+                req.onsuccess = (e) => { db = e.target.result; resolve(db); }; 
+            }); 
+        }
+
+        async function saveCurrentFileToDB(blob, hash, name) { 
+            try { db.transaction('files', 'readwrite').objectStore('files').put({ data: blob, hash: hash, name: name }, 'last_session_file'); } catch(e) {} 
+        }
+
+        async function addToHistory(fileBlob, fileName, fHash) { 
+            try { db.transaction('history', 'readwrite').objectStore('history').put({ hash: fHash, name: fileName, date: new Date(), data: fileBlob }); } catch(e) {} 
+        }
+
+        async function getHistory() { 
+            return new Promise((resolve) => { 
+                const tx = db.transaction('history', 'readonly'); 
+                const req = tx.objectStore('history').getAll(); 
+                req.onsuccess = () => resolve(req.result); req.onerror  = () => resolve([]); 
+            }); 
+        }
+
+        async function getLastSessionFile() { 
+            return new Promise((resolve) => { 
+                const tx = db.transaction('files', 'readonly'); 
+                const req = tx.objectStore('files').get('last_session_file'); 
+                req.onsuccess = () => resolve(req.result); req.onerror  = () => resolve(null); 
+            }); 
+        }
+        
+        function base64ToBlob(base64, type = "application/pdf") { 
+            const binStr = atob(base64); const len = binStr.length; const arr = new Uint8Array(len); 
+            for (let i = 0; i < len; i++) arr[i] = binStr.charCodeAt(i); 
+            return new Blob([arr], { type: type }); 
+        }
+
+        function loadDefaultPDF() { 
+            const blob = base64ToBlob(BLANK_PDF_DATA); 
+            fileHash = 'blank'; 
+            loadPDF(URL.createObjectURL(blob), true).catch(e=>{}); 
+        }
+        
+        // --- YENİ DOSYA OLUŞTURMA (JS İLE PDF ÜRETİMİ) ---
+        window.createNewFile = async (type) => {
+            closeAllPopups();
+            if (isQuestionMode) closeQuestionMode(); // OTOMATİK KAPATMA
+            
+            if(!window.jspdf) { alert("PDF Kütüphanesi yüklenemedi."); return; }
+            loadingMsg.style.display = 'block';
+
+            await forceCleanup();
+
+            try {
+                const { jsPDF } = window.jspdf;
+                // A4 Boyutu: 595.28 x 841.89 (pixel biriminde jsPDF varsayılanı)
+                // Dikine (Portrait)
+                const doc = new jsPDF({
+                    orientation: 'p',
+                    unit: 'pt',
+                    format: 'a4'
+                });
+
+                const w = doc.internal.pageSize.getWidth();
+                const h = doc.internal.pageSize.getHeight();
+                
+                doc.setDrawColor(200, 200, 220); 
+                doc.setLineWidth(0.5);
+
+                if (type === 'grid') {
+                    // Kareli
+                    const step = 20; // Kare boyutu
+                    // Dikey çizgiler
+                    for(let x=step; x<w; x+=step) {
+                        doc.line(x, 0, x, h);
+                    }
+                    // Yatay çizgiler
+                    for(let y=step; y<h; y+=step) {
+                        doc.line(0, y, w, y);
+                    }
+                    fileHash = "kareli_" + new Date().getTime();
+                } 
+                else if (type === 'lined') {
+                    // Çizgili
+                    const step = 25; // Satır aralığı
+                    // Yatay çizgiler
+                    for(let y=step*2; y<h; y+=step) {
+                        doc.line(30, y, w-30, y); // Kenar boşluğu bırakarak
+                    }
+                    // Kırmızı kenar çizgisi
+                    doc.setDrawColor(255, 100, 100);
+                    doc.line(40, 0, 40, h);
+                    fileHash = "cizgili_" + new Date().getTime();
+                } 
+                else {
+                    // Boş Sayfa
+                    fileHash = "bos_" + new Date().getTime();
+                }
+
+                const pdfBlob = doc.output('blob');
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                
+                pageStrokes = {}; // Çizimleri sıfırla
+                await loadPDF(pdfUrl, true);
+                
+                // Kaydet
+                saveCurrentFileToDB(pdfBlob, fileHash, (type === 'grid' ? "Kareli" : (type==='lined' ? "Çizgili" : "Boş")) + " Sayfa.pdf");
+                
+            } catch(e) {
+                console.error(e);
+                alert("Sayfa oluşturulurken hata: " + e.message);
+            } finally {
+                loadingMsg.style.display = 'none';
+            }
+        };
+
+		document.getElementById('file-input').addEventListener('change', function(e) { 
+            const file = e.target.files[0]; 
+            if(file) { 
+                if(isQuestionMode) closeQuestionMode(); // OTOMATİK KAPATMA
+                loadingMsg.style.display = 'block'; 
+                
+                const p = parseInt(document.getElementById('page-input').value);
+                saveDrawing(p);
+
+                worldContainer.innerHTML = ''; 
+                pageStrokes = {}; 
+                const isImage = file.type.startsWith('image/'); 
+                if (isImage) { convertImageToPDFAndLoad(file); } else {
+                    const objectUrl = URL.createObjectURL(file); 
+                    fileHash = file.name.replace(/\W/g, '') + '_' + file.size; 
+                    loadPDF(objectUrl, true).then(() => { 
+                        saveCurrentFileToDB(file, fileHash, file.name); 
+                        addToHistory(file, file.name, fileHash); 
+                    }).catch(err => { alert("PDF Yükleme Hatası"); loadingMsg.style.display='none'; }); 
+                }
+            } 
+        });
+
+        // --- RESMİ PDF'E ÇEVİR VE AÇ ---
+        async function convertImageToPDFAndLoad(file) {
+            loadingMsg.style.display = 'block';
+            await forceCleanup(); 
+            try {
+                const { jsPDF } = window.jspdf;
+                const imgUrl = URL.createObjectURL(file);
+                const img = new Image();
+                img.src = imgUrl;
+                await new Promise(resolve => { img.onload = resolve; });
+
+                const doc = new jsPDF({ orientation: img.width > img.height ? 'l' : 'p', unit: 'px', format: [img.width, img.height], hotfixes: ["px_scaling"] });
+                const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+                const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, c.width, c.height);
+                const imgData = c.toDataURL('image/jpeg', 0.95);
+                doc.addImage(imgData, 'JPEG', 0, 0, img.width, img.height);
+                
+                const pdfBlob = doc.output('blob');
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                fileHash = "img2pdf_" + file.name.replace(/\W/g, '') + '_' + file.size;
+                await loadPDF(pdfUrl, true);
+
+                const newFileName = file.name.split('.')[0] + ".pdf";
+                saveCurrentFileToDB(pdfBlob, fileHash, newFileName);
+                addToHistory(pdfBlob, newFileName, fileHash);
+            } catch (e) { console.error(e); alert("Hata: " + e.message); loadingMsg.style.display = 'none'; }
+        }
+		
+        // --- GERİ DÖNME MEKANİZMASI ---
+        let previousSession = null; 
+
+        async function restoreMainSession() {
+            if (!previousSession) return;
+            loadingMsg.style.display = 'block';
+
+            await forceCleanup(); 
+
+            try {
+                const tx = db.transaction('history', 'readonly');
+                const store = tx.objectStore('history');
+                const req = store.get(previousSession.hash);
+                const originalBlob = await new Promise((resolve, reject) => {
+                    req.onsuccess = (e) => resolve(e.target.result ? e.target.result.data : null);
+                    req.onerror = reject;
+                });
+
+                if(!originalBlob) throw new Error("Dosya geçmişten silinmiş!");
+
+                fileHash = previousSession.hash;
+                pageStrokes = previousSession.strokes; 
+                const objectUrl = URL.createObjectURL(originalBlob);
+                await loadPDF(objectUrl, false);
+
+                const savedPage = previousSession.page;
+                document.getElementById('page-input').value = savedPage;
+                await renderSpecificPage(savedPage);
+                pz = { ...previousSession.pz }; 
+                updateTransform(); 
+            } catch(e) { alert("Dönüş hatası: " + e.message); }
+            
+            previousSession = null; loadingMsg.style.display = 'none';
+        }
+
+        async function loadPDF(url, isNew) { 
+            loadingMsg.style.display='block'; 
+            
+            if (activePdfUrl) {
+                URL.revokeObjectURL(activePdfUrl);
+                activePdfUrl = null;
+            }
+            activePdfUrl = url;
+
+            try { 
+                const loadingTask = pdfjsLib.getDocument(url);
+                pdfDoc = await loadingTask.promise; 
+                await initPages(); 
+                if(isNew) setTimeout(fitToWidth, 100); else restoreFileState(); 
+            } catch(e){ 
+                console.error(e); alert("Dosya Açılamadı");
+            } 
+            finally { loadingMsg.style.display='none'; } 
+        }
+        
+        async function initPages() { 
+            worldContainer.innerHTML = ''; 
+            let currentY = 20; 
+            const GAP = 20; 
+            if (pageObserver) pageObserver.disconnect();
+            pageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) { renderSpecificPage(parseInt(entry.target.dataset.pageNum)); } });
+            }, { root: null, rootMargin: '1000px' }); 
+
+            for(let i=1; i<=pdfDoc.numPages; i++) { 
+                const p = await pdfDoc.getPage(i); 
+                const vp = p.getViewport({scale:1}); 
+                const w = document.createElement('div'); w.className='page-wrapper'; w.id='page-wrapper-'+i; w.dataset.pageNum=i; 
+                w.style.width  = vp.width  + 'px'; w.style.height = vp.height + 'px'; w.style.top    = currentY + 'px'; 
+                worldContainer.appendChild(w); pageObserver.observe(w); currentY += vp.height + GAP; 
+            } 
+        }
+        
+        async function renderSpecificPage(num) {
+            const wrapper = document.getElementById('page-wrapper-' + num);
+            if(!wrapper) return;
+            if(wrapper.querySelector('.draw-layer')) return; 
+
+            const s = BASE_RENDER_SCALE; 
+            const p = await pdfDoc.getPage(num); const vp = p.getViewport({scale:s}); 
+            const c = document.createElement('canvas'); c.className='pdf-content'; c.width = vp.width; c.height = vp.height; c.dataset.renderScale = s;   
+            const ctx=c.getContext('2d'); await p.render({canvasContext:ctx, viewport:vp}).promise; 
+            wrapper.appendChild(c); 
+
+            const dl = document.createElement('canvas'); dl.className='draw-layer'; wrapper.appendChild(dl);
+            dl.width = parseInt(wrapper.style.width)*s; dl.height = parseInt(wrapper.style.height)*s; dl.dataset.renderScale = s;
+            const dCtx=dl.getContext('2d', { desynchronized: true, alpha: true }); dCtx.scale(s,s); dCtx.imageSmoothingEnabled=true;
+            if(pageStrokes[num]) redrawCanvas(dCtx, pageStrokes[num]); else loadDrawingForPage(num, dCtx, dl.width, dl.height);
+        }
+
+        async function boostPdfQualityForPage(pageNum) {
+            if (!pdfDoc) return;
+            const wrapper = document.getElementById('page-wrapper-' + pageNum);
+            if (!wrapper) return;
+            const pdfCanvas = wrapper.querySelector('.pdf-content');
+            if (!(pdfCanvas instanceof HTMLCanvasElement)) return;
+            const baseWidth = parseFloat(wrapper.style.width); const baseHeight = parseFloat(wrapper.style.height);
+            if (!baseWidth || !baseHeight) return;
+            const currentScale = parseFloat(pdfCanvas.dataset.renderScale || BASE_RENDER_SCALE);
+            if (currentScale >= TARGET_PDF_SCALE - 0.05) return;
+            let targetScale = TARGET_PDF_SCALE;
+            const predictedPixels = baseWidth * baseHeight * targetScale * targetScale;
+            if (predictedPixels > MAX_PDF_PIXELS) {
+                const limitedScale = Math.sqrt(MAX_PDF_PIXELS / (baseWidth * baseHeight));
+                if (limitedScale <= currentScale + 0.05) return;
+                targetScale = limitedScale;
+            }
+            try {
+                const page = await pdfDoc.getPage(pageNum); const vp = page.getViewport({ scale: targetScale });
+                pdfCanvas.width = vp.width; pdfCanvas.height = vp.height; pdfCanvas.dataset.renderScale = targetScale;
+                const ctx = pdfCanvas.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            } catch (e) { console.log('PDF kalite hatası:', e); }
+        }
+
+        function initPointerEvents() {
+            const el = container;
+            el.addEventListener('pointerdown', e => {
+                if(isQuestionMode) return;
+                if(e.pointerType==='touch' && !e.isPrimary) { isDrawing=false; isPinching=true; } else {
+                    if(currentTool==='hand' || e.button===1) { isPanning=true; el.style.cursor='grabbing'; }
+                    else if(currentTool==='scissors') { 
+                        isSelecting=true; selectionStartX=e.clientX; selectionStartY=e.clientY; 
+                        const b=document.getElementById('selection-box'); b.style.display='block'; b.style.left=e.clientX+'px'; b.style.top =e.clientY+'px'; b.style.width='0'; b.style.height='0'; 
+                        el.setPointerCapture(e.pointerId); 
+                    }
+                    else { 
+                        const w = document.elementFromPoint(e.clientX, e.clientY)?.closest('.page-wrapper'); 
+                        if(w) { activeCanvas=w.querySelector('.draw-layer'); isDrawing=true; startDraw(e, activeCanvas, parseInt(w.dataset.pageNum)); el.setPointerCapture(e.pointerId); } 
+                    }
+                } 
+                pzStart.x=pz.x; pzStart.y=pz.y; lastPinchCenter={x:e.clientX, y:e.clientY};
+            });
+
+            el.addEventListener('touchstart', e => { 
+                if(e.touches.length===2) { 
+                    isPinching=true; isDrawing=false; 
+                    const dx=e.touches[0].clientX-e.touches[1].clientX; const dy=e.touches[0].clientY-e.touches[1].clientY; 
+                    pzStart.dist=Math.hypot(dx,dy); pzStart.scale=pz.scale; 
+                    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2; const cy=(e.touches[0].clientY+e.touches[1].clientY)/2; 
+                    const wc=getWorldCoordinates(cx,cy); pzStart.wX=wc.x; pzStart.wY=wc.y; 
+                } 
+            }, {passive:false});
+
+            el.addEventListener('touchmove', e => { 
+                if(isPinching && e.touches.length===2) { 
+                    e.preventDefault(); 
+                    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); 
+                    const s=(d/pzStart.dist)*pzStart.scale; 
+                    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2; const cy=(e.touches[0].clientY+e.touches[1].clientY)/2; 
+                    let newScale = Math.min(Math.max(s,0.2), 4.0); 
+                    pz.scale=newScale; pz.x=cx-pzStart.wX*pz.scale; pz.y=cy-pzStart.wY*pz.scale; 
+                    updateTransform(); 
+                } 
+            }, {passive:false});
+
+            el.addEventListener('touchend', e => { if(e.touches.length<2) isPinching=false; });
+
+            el.addEventListener('pointermove', e => { 
+                if(isPinching) return; 
+                if(isPanning) { e.preventDefault(); pz.x+=e.clientX-lastPinchCenter.x; pz.y+=e.clientY-lastPinchCenter.y; updateTransform(); } 
+                else if(isDrawing && activeCanvas) { e.preventDefault(); if(e.getCoalescedEvents) { const events = e.getCoalescedEvents(); for(let ev of events) draw(ev, activeCanvas); } else { draw(e, activeCanvas); } } 
+                else if(isSelecting) { 
+                    e.preventDefault(); 
+                    const x=Math.min(e.clientX, selectionStartX), y=Math.min(e.clientY, selectionStartY), w=Math.abs(e.clientX-selectionStartX), h=Math.abs(e.clientY-selectionStartY); 
+                    const b=document.getElementById('selection-box'); b.style.left=x+'px'; b.style.top=y+'px'; b.style.width=w+'px'; b.style.height=h+'px'; 
+                } 
+                lastPinchCenter={x:e.clientX, y:e.clientY}; updateCurrentPageNumber(); 
+            });
+
+            el.addEventListener('pointerup', e => { 
+                if(isDrawing) { endDraw(); isDrawing=false; el.releasePointerCapture(e.pointerId); } 
+                if(isPanning) { isPanning=false; el.style.cursor='default'; saveFileState(); } 
+                if(isSelecting) { isSelecting=false; el.releasePointerCapture(e.pointerId); captureSelection(); } 
+            });
+
+            el.addEventListener('wheel', e => { 
+                if(e.ctrlKey) { 
+                    e.preventDefault(); const s = Math.exp(-e.deltaY * 0.01); let ns = pz.scale * s; if(ns<0.2) ns=0.2; if(ns>4.0) ns=4.0; 
+                    const rect=container.getBoundingClientRect(); const mx=e.clientX-rect.left; const my=e.clientY-rect.top; const wx=(mx-pz.x)/pz.scale; const wy=(my-pz.y)/pz.scale; 
+                    pz.x=mx-wx*ns; pz.y=my-wy*ns; pz.scale=ns; updateTransform(); 
+                } else { e.preventDefault(); pz.y-=e.deltaY; updateTransform(); updateCurrentPageNumber(); } 
+            }, {passive:false});
+
+            const stopAction = (e) => {
+                if(isDrawing) { endDraw(); isDrawing=false; if(el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); }
+                if(isPanning) { isPanning=false; el.style.cursor='default'; saveFileState(); }
+                if(isSelecting) { isSelecting=false; if(el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); }
+            };
+            el.addEventListener('pointercancel', stopAction); el.addEventListener('pointerleave',  stopAction);
+        }
+
+function initQuestionTouchZoom() {
+            const overlay = document.getElementById('question-mode-overlay');
+            if (!overlay) return;
+
+            overlay.addEventListener('touchstart', function (e) {
+                if (!isQuestionMode) return;
+                if (e.touches.length === 2) {
+                    e.preventDefault(); 
+                    isQPinching = true; 
+                    isDrawing = false; 
+                    isPanning = false;
+                    
+                    const t0 = e.touches[0]; 
+                    const t1 = e.touches[1]; 
+                    const dx = t0.clientX - t1.clientX; 
+                    const dy = t0.clientY - t1.clientY;
+                    
+                    qPinchStartDist = Math.hypot(dx, dy); 
+                    qPinchStartScale = qScale;
+                    
+                    const cx = (t0.clientX + t1.clientX) / 2; 
+                    const cy = (t0.clientY + t1.clientY) / 2;
+                    
+                    const wx = (cx - qPanX) / qScale; 
+                    const wy = (cy - qPanY) / qScale;
+                    qPinchStartMid = { x: wx, y: wy };
+                }
+            }, { passive: false });
+
+            overlay.addEventListener('touchmove', function (e) {
+                if (!isQuestionMode || !isQPinching || e.touches.length !== 2) return;
+                e.preventDefault();
+                
+                const t0 = e.touches[0]; 
+                const t1 = e.touches[1]; 
+                const dx = t0.clientX - t1.clientX; 
+                const dy = t0.clientY - t1.clientY;
+                
+                const dist = Math.hypot(dx, dy); 
+                let newScale = (dist / qPinchStartDist) * qPinchStartScale;
+                
+                if (newScale < 0.1) newScale = 0.1; 
+                if (newScale > 3) newScale = 3; 
+                
+                const cx = (t0.clientX + t1.clientX) / 2; 
+                const cy = (t0.clientY + t1.clientY) / 2;
+                
+                qScale = newScale; 
+                qPanX = cx - qPinchStartMid.x * qScale; 
+                qPanY = cy - qPinchStartMid.y * qScale;
+                
+                document.getElementById('zoom-display').innerText = Math.round(qScale * 100) + '%';
+                
+                const qt = document.getElementById('q-temp-canvas');
+                if(qt) {
+                    const tempCtx = qt.getContext('2d');
+                    tempCtx.setTransform(1,0,0,1,0,0);
+                    tempCtx.clearRect(0, 0, qt.width, qt.height);
+                }
+
+                renderQuestionCanvas();
+            }, { passive: false });
+
+            overlay.addEventListener('touchend', function (e) { 
+                if (e.touches.length < 2) { 
+                    isQPinching = false; 
+                } 
+            });
+            
+            overlay.addEventListener('touchcancel', function () { 
+                isQPinching = false; 
+            });
+        }
+
+        function startDraw(e, canvas, pNum) {
+            activeCtx = canvas.getContext('2d'); 
+            const rect = canvas.getBoundingClientRect();
+            const currentScale = parseFloat(canvas.dataset.renderScale || BASE_RENDER_SCALE);
+            const rawX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const rawY = (e.clientY - rect.top)  * (canvas.height / rect.height);
+            startX = rawX / currentScale; startY = rawY / currentScale;
+
+            const s = (currentTool === 'shape') ? toolSettings['shape'] : toolSettings[currentTool];
+            const screenSize = s.size;
+            const worldSize = worldSizeFromZoom(screenSize, pz.scale);
+            const tipForThisStroke = (currentTool === 'highlight') ? 'round' : currentTip;
+
+            currentStroke = { tool: currentTool, shape: currentShape, color: s.color, size: worldSize, sizeScreen: screenSize, tip: tipForThisStroke, points: [] };
+            
+            if(currentTool === 'shape' || (currentTool === 'highlight' && !isQuestionMode)) { 
+                currentStroke.startX = startX; currentStroke.startY = startY;
+                if(currentTool !== 'shape') currentStroke.points.push({x: startX, y: startY});
+                if(!isQuestionMode) {
+                    tempCanvas = document.createElement('canvas'); tempCanvas.width = canvas.width; tempCanvas.height = canvas.height; tempCanvas.className = 'temp-draw-layer'; tempCanvas.style.width = canvas.style.width; tempCanvas.style.height = canvas.style.height; canvas.parentElement.appendChild(tempCanvas); tempCtx = tempCanvas.getContext('2d'); tempCtx.scale(currentScale, currentScale);
+                }
+            } else { currentStroke.points.push({x: startX, y: startY}); }
+
+            if (pNum !== -1) { if (!pageStrokes[pNum]) pageStrokes[pNum] = []; }
+            
+            activeCtx.lineWidth = worldSize; 
+            if(tipForThisStroke === 'round') { activeCtx.lineCap = 'round'; activeCtx.lineJoin = 'round'; }
+            else if(tipForThisStroke === 'square') { activeCtx.lineCap = 'square'; activeCtx.lineJoin = 'miter'; }
+            else if(tipForThisStroke === 'chisel') { activeCtx.lineCap = 'butt'; activeCtx.lineJoin = 'bevel'; }
+
+            if(currentTool === 'highlight') { activeCtx.globalCompositeOperation = 'source-over'; activeCtx.strokeStyle = convertHexToRGBA(s.color, 0.2); } 
+            else if(currentTool === 'eraser') { activeCtx.globalCompositeOperation = 'destination-out'; activeCtx.strokeStyle = "rgba(0,0,0,1)"; } 
+            else { activeCtx.globalCompositeOperation = 'source-over'; activeCtx.strokeStyle = s.color; }
+            
+            if (currentTool !== 'shape' && currentTool !== 'highlight') { activeCtx.beginPath(); activeCtx.moveTo(startX, startY); activeCtx.lineTo(startX, startY); activeCtx.stroke(); lastX = startX; lastY = startY; lastMidX = startX; lastMidY = startY; }
+        }
+
+        function drawPointByTip(ctx, x, y, size, color, tip, opacity = 1) {
+            ctx.save(); ctx.fillStyle = (opacity < 1) ? convertHexToRGBA(color, opacity) : color; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1;
+            if (tip === 'round') { const r = size / 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+            else if (tip === 'chisel') { const angle = Math.PI / 4; ctx.translate(x, y); ctx.rotate(angle); ctx.fillRect(-size / 2, -(size/4) / 2, size, size/4); } 
+            else if (tip === 'square') { ctx.fillRect(x - size / 2, y - size / 2, size, size); }
+            ctx.restore();
+        }
+
+        function draw(e, canvas) {
+            const rect = canvas.getBoundingClientRect(); const currentScale = parseFloat(canvas.dataset.renderScale || BASE_RENDER_SCALE);
+            const rawX = (e.clientX - rect.left) * (canvas.width / rect.width); const rawY = (e.clientY - rect.top)  * (canvas.height / rect.height);
+            let x = rawX / currentScale; let y = rawY / currentScale;
+            const dashVal = isQuestionMode ? 15 : 5;
+            const currentStrokeTip = currentStroke ? (currentStroke.tip || 'round') : currentTip;
+
+            if (currentTool !== 'shape') { 
+                currentStroke.points.push({x: x, y: y});
+                if (currentTool === 'highlight') {
+                    const ctxLocal = tempCtx || activeCtx;
+                    if (tempCtx) { ctxLocal.save(); ctxLocal.setTransform(1,0,0,1,0,0); ctxLocal.clearRect(0, 0, tempCanvas.width, tempCanvas.height); ctxLocal.restore(); }
+                    ctxLocal.beginPath(); ctxLocal.lineWidth = currentStroke.size; ctxLocal.lineCap = 'round'; ctxLocal.lineJoin = 'round'; ctxLocal.strokeStyle = convertHexToRGBA(currentStroke.color, 0.2);
+                    const pts = currentStroke.points;
+                    if (pts.length > 0) { ctxLocal.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i].x + pts[i+1].x) / 2; const my = (pts[i].y + pts[i+1].y) / 2; ctxLocal.quadraticCurveTo(pts[i].x, pts[i].y, mx, my); } if (pts.length > 1) { ctxLocal.lineTo(pts[pts.length-1].x, pts[pts.length-1].y); } }
+                    ctxLocal.stroke();
+                }
+                else if (currentTool === 'eraser') {
+                    activeCtx.beginPath(); activeCtx.moveTo(lastMidX, lastMidY); const midX = (lastX + x) / 2; const midY = (lastY + y) / 2; activeCtx.quadraticCurveTo(lastX, lastY, midX, midY); lastX = x; lastY = y; lastMidX = midX; lastMidY = midY; activeCtx.stroke(); 
+                }
+                else {
+                    const dist = Math.hypot(x - lastX, y - lastY); const steps = Math.ceil(dist * 2); const op = 1.0;
+                    for (let i = 0; i < steps; i++) { const t = i / steps; const lerpX = lastX + (x - lastX) * t; const lerpY = lastY + (y - lastY) * t; drawPointByTip(activeCtx, lerpX, lerpY, currentStroke.size, currentStroke.color, currentStrokeTip, op); }
+                    lastX = x; lastY = y;
+                }
+            } 
+            else { 
+                const targetCtx = tempCtx ? tempCtx : activeCtx;
+                if(tempCtx) { targetCtx.save(); targetCtx.setTransform(1,0,0,1,0,0); targetCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height); targetCtx.restore(); }
+                targetCtx.lineWidth = currentStroke.size; targetCtx.strokeStyle = currentStroke.color; targetCtx.beginPath();
+                if (currentShape === 'dashed') { targetCtx.setLineDash([dashVal, dashVal]); targetCtx.moveTo(startX, startY); targetCtx.lineTo(x, y); targetCtx.stroke(); targetCtx.setLineDash([]); }
+                else if (currentShape === 'line') { targetCtx.moveTo(startX, startY); targetCtx.lineTo(x, y); targetCtx.stroke(); } 
+                else if (currentShape === 'arrowRight' || currentShape === 'arrowLeft' || currentShape === 'arrowDouble') { drawArrow(targetCtx, startX, startY, x, y, currentShape); }
+                else if (currentShape === 'rect') { targetCtx.strokeRect(startX, startY, x - startX, y - startY); } 
+                else if (currentShape === 'circle') { const r = Math.sqrt(Math.pow(x-startX, 2) + Math.pow(y-startY, 2)); targetCtx.arc(startX, startY, r, 0, 2 * Math.PI); targetCtx.stroke(); } 
+                else if (currentShape === 'triangle') { targetCtx.moveTo(startX + (x-startX)/2, startY); targetCtx.lineTo(startX, y); targetCtx.lineTo(x, y); targetCtx.closePath(); targetCtx.stroke(); }
+                currentStroke.endX=x; currentStroke.endY=y;
+            }
+        }
+
+		function drawArrow(ctx, x1, y1, x2, y2, type) { 
+            const headLength = ctx.lineWidth * 3; 
+            
+            const angle = Math.atan2(y2 - y1, x2 - x1); 
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.beginPath(); 
+            
+            if(type === 'arrowRight' || type === 'arrowDouble') { 
+                ctx.moveTo(x2, y2); 
+                ctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), y2 - headLength * Math.sin(angle - Math.PI / 6)); 
+                ctx.moveTo(x2, y2); 
+                ctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), y2 - headLength * Math.sin(angle + Math.PI / 6)); 
+            } 
+            
+            if(type === 'arrowLeft' || type === 'arrowDouble') { 
+                ctx.moveTo(x1, y1); 
+                ctx.lineTo(x1 + headLength * Math.cos(angle - Math.PI / 6), y1 + headLength * Math.sin(angle - Math.PI / 6)); 
+                ctx.moveTo(x1, y1); 
+                ctx.lineTo(x1 + headLength * Math.cos(angle + Math.PI / 6), y1 + headLength * Math.sin(angle + Math.PI / 6)); 
+            } 
+            
+            ctx.stroke(); 
+        }
+        
+        function endDraw() { 
+            if (currentStroke && currentTool !== 'shape' && currentTool !== 'highlight' && (currentStroke.tip === 'round' || currentTool === 'eraser')) { activeCtx.closePath(); }
+            const dashVal = isQuestionMode ? 15 : 5;
+            if(currentTool === 'shape' || (currentTool === 'highlight' && !isQuestionMode)) {
+                if(tempCanvas) { tempCanvas.remove(); tempCanvas = null; tempCtx = null; }
+                if(currentStroke && activeCanvas && !isQuestionMode) {
+                    activeCtx.lineWidth = currentStroke.size; 
+                    if(currentStroke.tool === 'highlight') {
+                        activeCtx.globalCompositeOperation = 'source-over'; activeCtx.strokeStyle = convertHexToRGBA(currentStroke.color, 0.2); 
+                        const pts = currentStroke.points;
+                        if(pts && pts.length > 0) { activeCtx.beginPath(); activeCtx.moveTo(pts[0].x, pts[0].y); for(let i = 1; i < pts.length - 1; i++) { const mx = (pts[i].x + pts[i+1].x) / 2; const my = (pts[i].y + pts[i+1].y) / 2; activeCtx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my); } if(pts.length > 1) activeCtx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y); activeCtx.stroke(); }
+                    } else {
+                        activeCtx.strokeStyle = currentStroke.color; activeCtx.beginPath();
+                        const s = currentStroke;
+                        if (s.shape === 'dashed') { activeCtx.setLineDash([dashVal, dashVal]); activeCtx.moveTo(s.startX, s.startY); activeCtx.lineTo(s.endX, s.endY); activeCtx.stroke(); activeCtx.setLineDash([]); }
+                        else if (s.shape === 'line') { activeCtx.moveTo(s.startX, s.startY); activeCtx.lineTo(s.endX, s.endY); activeCtx.stroke(); } 
+                        else if (s.shape === 'arrowRight' || s.shape === 'arrowLeft' || s.shape === 'arrowDouble') { drawArrow(activeCtx, s.startX, s.startY, s.endX, s.endY, s.shape); }
+                        else if (s.shape === 'rect') { activeCtx.strokeRect(s.startX, s.startY, s.endX-s.startX, s.endY-s.startY); } 
+                        else if (s.shape === 'circle') { const r = Math.sqrt(Math.pow(s.endX-s.startX, 2) + Math.pow(s.endY-s.startY, 2)); activeCtx.arc(s.startX, s.startY, r, 0, 2 * Math.PI); activeCtx.stroke(); } 
+                        else if (s.shape === 'triangle') { activeCtx.moveTo(s.startX + (s.endX-s.startX)/2, s.startY); activeCtx.lineTo(s.startX, s.endY); activeCtx.lineTo(s.endX, s.endY); activeCtx.closePath(); activeCtx.stroke(); }
+                    }
+                }
+            } else if (tempCanvas) { tempCanvas.remove(); tempCanvas = null; tempCtx = null; }
+
+            if(currentStroke && activeCanvas) { 
+                const p = parseInt(activeCanvas.closest('.page-wrapper')?.dataset.pageNum || -1); 
+                if(p!==-1){ if(!pageStrokes[p]) pageStrokes[p] = []; pageStrokes[p].push(currentStroke); saveDrawing(p); } 
+                currentStroke=null; 
+            } 
+        }
+
+		function redrawCanvas(ctx, strokes, viewScale = 1) {
+			if (!strokes) return;
+			const isPdfLayer = ctx.canvas.classList.contains('draw-layer') || ctx.canvas.classList.contains('temp-draw-layer');
+			const dashVal = isPdfLayer ? 5 : 15;
+
+			strokes.forEach(s => {
+				const tip = s.tip || 'round';
+				const worldSize = s.size; 
+
+				if (tip === 'round' || s.tool === 'eraser' || s.tool === 'shape') {
+					ctx.beginPath(); ctx.lineWidth = worldSize;
+					if(tip === 'round') { ctx.lineCap = 'round'; ctx.lineJoin = 'round'; } 
+					else if(tip === 'square') { ctx.lineCap = 'square'; ctx.lineJoin = 'miter'; } 
+					else if(tip === 'chisel') { ctx.lineCap = 'butt'; ctx.lineJoin = 'bevel'; }
+
+					if(s.tool === 'highlight') { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = convertHexToRGBA(s.color, 0.2); } 
+					else if(s.tool === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.strokeStyle = "rgba(0,0,0,1)"; } 
+					else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = s.color; }
+					
+					if(s.tool === 'shape') {
+						 if (s.shape === 'dashed') { ctx.setLineDash([dashVal, dashVal]); ctx.moveTo(s.startX, s.startY); ctx.lineTo(s.endX, s.endY); ctx.stroke(); ctx.setLineDash([]); }
+						 else if (s.shape === 'line') { ctx.moveTo(s.startX, s.startY); ctx.lineTo(s.endX, s.endY); ctx.stroke(); } 
+						 else if (s.shape === 'arrowRight' || s.shape === 'arrowLeft' || s.shape === 'arrowDouble') { drawArrow(ctx, s.startX, s.startY, s.endX, s.endY, s.shape); }
+						 else if (s.shape === 'rect') ctx.strokeRect(s.startX, s.startY, s.endX-s.startX, s.endY-s.startY);
+						 else if (s.shape === 'circle') { ctx.arc(s.startX, s.startY, Math.sqrt(Math.pow(s.endX-s.startX,2)+Math.pow(s.endY-s.startY,2)), 0, 2*Math.PI); ctx.stroke(); }
+						 else if (s.shape === 'triangle') { ctx.moveTo(s.startX + (s.endX-s.startX)/2, s.startY); ctx.lineTo(s.startX, s.endY); ctx.lineTo(s.endX, s.endY); ctx.closePath(); ctx.stroke(); }
+					} else if(s.points.length>0) { 
+						ctx.moveTo(s.points[0].x, s.points[0].y); 
+						for(let i=1;i<s.points.length-1;i++) { const midX = (s.points[i].x + s.points[i+1].x) / 2; const midY = (s.points[i].y + s.points[i+1].y) / 2; ctx.quadraticCurveTo(s.points[i].x, s.points[i].y, midX, midY); }
+						ctx.lineTo(s.points[s.points.length-1].x, s.points[s.points.length-1].y); ctx.stroke(); 
+					}
+				} else {
+					const op = (s.tool === 'highlight') ? 0.2 : 1.0;
+					for (let i = 0; i < s.points.length - 1; i++) {
+						const p1 = s.points[i]; const p2 = s.points[i+1]; const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y); const steps = Math.ceil(dist * 2);
+						for (let j = 0; j < steps; j++) { const t = j / steps; const lerpX = p1.x + (p2.x - p1.x) * t; const lerpY = p1.y + (p2.y - p1.y) * t; drawPointByTip(ctx, lerpX, lerpY, worldSize, s.color, tip, op); }
+					}
+				}
+				ctx.globalCompositeOperation = 'source-over';
+			});
+		}
+        window.undoLastAction = () => { 
+            if (isQuestionMode) { if (qStrokes.length > 0) { qStrokes.pop(); renderQuestionCanvas(); } return; }
+            const p=parseInt(document.getElementById('page-input').value); 
+            if(pageStrokes[p] && pageStrokes[p].length) { pageStrokes[p].pop(); const dl=document.getElementById('page-wrapper-'+p).querySelector('.draw-layer'); const ctx = dl.getContext('2d'); ctx.clearRect(0,0,dl.width,dl.height); redrawCanvas(ctx, pageStrokes[p], pz.scale); saveDrawing(p); } 
+        };
+
+        window.saveDrawing = (p) => { if(pageStrokes[p]) db.transaction('drawings','readwrite').objectStore('drawings').put(pageStrokes[p], fileHash+'_p_'+p); };
+
+        function loadDrawingForPage(p, ctx, w, h) { 
+            db.transaction('drawings','readonly').objectStore('drawings').get(fileHash+'_p_'+p).onsuccess = (e) => { 
+                if(e.target.result) { pageStrokes[p] = e.target.result; ctx.clearRect(0,0,w,h); redrawCanvas(ctx, pageStrokes[p], pz.scale); } 
+            }; 
+        }
+
+        window.changePage = (d) => { if (isQuestionMode) return; const t = parseInt(document.getElementById('page-input').value) + d; if(t>=1 && t<=pdfDoc.numPages) { document.getElementById('page-input').value=t; goToPage(); } };
+
+        window.goToPage = () => { 
+            if (isQuestionMode) return;
+            const p = parseInt(document.getElementById('page-input').value); renderSpecificPage(p); if (pdfDoc) boostPdfQualityForPage(p); saveFileState(); 
+            const w = document.getElementById('page-wrapper-'+p); if(w) { pz.y = 50 - w.offsetTop * pz.scale; pz.x = (container.clientWidth - w.offsetWidth * pz.scale) / 2; updateTransform(); } 
+        };
+
+        function updateCurrentPageNumber() { 
+            if (isQuestionMode) return;
+            const centerY = (container.clientHeight/2 - pz.y) / pz.scale; let closest=1, minDiff=Infinity; 
+            document.querySelectorAll('.page-wrapper').forEach(w => { const d = Math.abs((w.offsetTop+w.offsetHeight/2)-centerY); if(d<minDiff) { minDiff=d; closest=parseInt(w.dataset.pageNum); } }); 
+            document.getElementById('page-input').value = closest; if (pdfDoc) boostPdfQualityForPage(closest);
+        }
+
+        window.stepZoom = (d) => { 
+            if (isQuestionMode) {
+                let currentPercent = Math.round(qScale * 100); let n = currentPercent + d; if (n > 500) n = 500; if (n < 10)  n = 10; applyZoomQuestion(n);
+            } else { let c = parseInt(document.getElementById('zoom-display').innerText); let n = c + d; if(n>400) n=400; if(n<20)  n=20; applyZoom(n); }
+        };
+
+        function applyZoomQuestion(val) {
+            if (!isQuestionMode) return;
+            if (val > 300) val = 300; if (val < 30)  val = 30;
+            const qc = document.getElementById('q-canvas'); if (!qc) return;
+            const newScale = val / 100; const cx = qc.width  / 2; const cy = qc.height / 2; const wx = (cx - qPanX) / qScale; const wy = (cy - qPanY) / qScale;
+            qScale = newScale; qPanX  = cx - wx * qScale; qPanY  = cy - wy * qScale;
+            document.getElementById('zoom-display').innerText = Math.round(qScale * 100) + '%'; renderQuestionCanvas();
+        }
+
+        window.applyZoom = (val) => { 
+            if (isQuestionMode) { applyZoomQuestion(val); return; }
+            if(val > 400) val = 400; if (val < 20) val = 20;
+
+            const oldScale = pz.scale;
+            const newScale = val / 100;
+            
+            const rect = container.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+
+            const wx = (cx - pz.x) / oldScale;
+            const wy = (cy - pz.y) / oldScale;
+
+            pz.scale = newScale;
+            pz.x = cx - wx * newScale;
+            pz.y = cy - wy * newScale;
+
+            updateTransform();
+            const currentPage = parseInt(document.getElementById('page-input').value);
+            if (pdfDoc) boostPdfQualityForPage(currentPage);
+        };
+
+        window.fitToWidth = () => { 
+            if (isQuestionMode) {
+                const qc = document.getElementById('q-canvas'); if (!qc) return;
+                qScale = 1; if (qBaseImage) { const w = qBaseImage.width  / SCISSOR_OVERSAMPLE; const h = qBaseImage.height / SCISSOR_OVERSAMPLE; qPanX = (qc.width  - w) / 2; qPanY = (qc.height - h) / 2; } else { qPanX = 0; qPanY = 0; }
+                document.getElementById('zoom-display').innerText = '100%'; renderQuestionCanvas(); return;
+            }
+            const p = parseInt(document.getElementById('page-input').value); 
+            const w = document.getElementById('page-wrapper-'+p); 
+            if(w) { 
+                const ns = (container.clientWidth-40)/w.offsetWidth; 
+                // applyZoom(ns*100); 
+                pz.scale = ns;
+                pz.x = (container.clientWidth - w.offsetWidth * ns) / 2;
+                pz.y = 50 - w.offsetTop * ns; // 50px padding from top
+                
+                updateTransform(); // This updates the view and the zoom display text
+                if (pdfDoc) boostPdfQualityForPage(p);
+            } 
+        };
+
+        window.toggleFullScreen = () => { 
+            if (!document.fullscreenElement) { 
+                document.documentElement.requestFullscreen().catch(err => { console.log(err); }); 
+            } else { 
+                if (document.exitFullscreen) document.exitFullscreen(); 
+            } 
+        };
+        
+        function updateFullScreenButtonText() {
+            const btn = document.getElementById('fullscreen-text-btn');
+            if(btn) {
+                if(document.fullscreenElement) {
+                    btn.innerText = "Tam Ekrandan Çık";
+                } else {
+                    btn.innerText = "Tam Ekran";
+                }
+            }
+        }
+        
+		window.clearCurrentPage = () => { 
+            // Eğer Soru Modundaysak (Makas ile kesilen ekran)
+            if(isQuestionMode) { 
+                qStrokes = []; 
+                renderQuestionCanvas(); 
+                closeAllPopups(); 
+                return; 
+            }
+            
+            // Normal Sayfa Modundaysak
+            const p = parseInt(document.getElementById('page-input').value); 
+            // Onay isteme kısmı (if confirm...) kaldırıldı, direkt işlem yapılıyor:
+            pageStrokes[p] = []; 
+            const dl = document.getElementById('page-wrapper-'+p).querySelector('.draw-layer'); 
+            const ctx = dl.getContext('2d'); 
+            ctx.clearRect(0,0,dl.width,dl.height); 
+            saveDrawing(p); 
+            closeAllPopups(); 
+        };
+
+		// --- KES MODU: EKRANDAN PNG AL, SORU MODUNDA AÇ ---
+		async function captureSelection() { 
+			const b = document.getElementById('selection-box'); 
+			const selRect = b.getBoundingClientRect(); 
+
+			if (selRect.width < 5 || selRect.height < 5) { 
+				b.style.display = 'none'; 
+				return; 
+			}
+
+			if (!pdfDoc) { 
+				b.style.display = 'none'; 
+				return; 
+			}
+
+			const currentPage = parseInt(document.getElementById('page-input').value) || 1;
+			const wrapper = document.getElementById('page-wrapper-' + currentPage);
+			if (!wrapper) { 
+				b.style.display = 'none'; 
+				return; 
+			}
+
+			let pdfCanvas = wrapper.querySelector('.pdf-content');
+			let drawLayer = wrapper.querySelector('.draw-layer');
+
+			if (!pdfCanvas) {
+				await renderSpecificPage(currentPage);
+				pdfCanvas = wrapper.querySelector('.pdf-content');
+				drawLayer = wrapper.querySelector('.draw-layer');
+				if (!pdfCanvas) {
+					b.style.display = 'none';
+					return;
+				}
+			}
+
+			const pdfRect = pdfCanvas.getBoundingClientRect();
+
+			const interLeft   = Math.max(selRect.left,   pdfRect.left);
+			const interTop    = Math.max(selRect.top,    pdfRect.top);
+			const interRight  = Math.min(selRect.right,  pdfRect.right);
+			const interBottom = Math.min(selRect.bottom, pdfRect.bottom);
+
+			const interW = interRight - interLeft;
+			const interH = interBottom - interTop;
+
+			if (interW <= 5 || interH <= 5) {
+				b.style.display = 'none';
+				return;
+			}
+
+			const os = SCISSOR_OVERSAMPLE;            
+			const MAX_PIXELS = 10_000_000;            
+
+			if (interW * interH * os * os > MAX_PIXELS) {
+				b.style.display = 'none';
+				alert("Seçilen alan çok büyük. Biraz daha küçük bir alan seçmeyi deneyin.");
+				return;
+			}
+
+			const canvas = document.createElement('canvas');
+			canvas.width  = Math.floor(interW * os);
+			canvas.height = Math.floor(interH * os);
+
+			const ctx = canvas.getContext('2d', { alpha: true });
+			ctx.fillStyle = '#ffffff';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.imageSmoothingEnabled  = true;
+			ctx.imageSmoothingQuality  = 'high';
+
+			ctx.scale(os, os);
+			ctx.translate(-interLeft, -interTop);
+
+			try {
+				ctx.drawImage(pdfCanvas, pdfRect.left, pdfRect.top, pdfRect.width, pdfRect.height);
+			} catch (e) {
+				console.warn('pdf-content draw error', e);
+			}
+
+			if (drawLayer) {
+				const dRect = drawLayer.getBoundingClientRect();
+				try {
+					ctx.drawImage(drawLayer, dRect.left, dRect.top, dRect.width, dRect.height);
+				} catch (e) {
+					console.warn('draw-layer draw error', e);
+				}
+			}
+
+			b.style.display = 'none';
+
+			canvas.toBlob(blob => {
+				if (!blob) {
+					canvas.width = canvas.height = 1;
+					alert("Seçim alınamadı. Bellek yetersiz olabilir. Daha küçük bir alan deneyin.");
+					return;
+				}
+
+				const url = URL.createObjectURL(blob);
+				const img = new Image();
+				img.onload = () => {
+					URL.revokeObjectURL(url);
+					canvas.width = canvas.height = 1; 
+
+					openQuestionMode(img);
+				};
+				img.src = url;
+			}, 'image/png', 0.95);
+		}
+
+function openQuestionMode(imgObj) { 
+            isQuestionMode = true; 
+            qStrokes = []; 
+            qScale = 1; 
+            qPanX = 50; 
+            qPanY = 50; 
+            qBaseImage = imgObj;
+            
+			const overlay = document.getElementById('question-mode-overlay'); 
+            
+            // --- KATMAN 1: ARKA PLAN (Resim ve Beyaz Zemin) ---
+            let qBg = document.getElementById('q-bg-canvas');
+            if (!qBg) {
+                qBg = document.createElement('canvas');
+                qBg.id = 'q-bg-canvas';
+                qBg.style.position = 'absolute';
+                qBg.style.top = '0';
+                qBg.style.left = '0';
+                qBg.style.width = '100%';
+                qBg.style.height = '100%';
+                qBg.style.zIndex = '1'; 
+                overlay.appendChild(qBg);
+            }
+
+            // --- KATMAN 2: ANA ÇİZİM (Silinecek Katman) ---
+            const qc = document.getElementById('q-canvas'); 
+            qc.style.position = 'absolute';
+            qc.style.zIndex = '2'; 
+
+            // --- KATMAN 3: GEÇİCİ ÖNİZLEME (Hız için) ---
+            let qt = document.getElementById('q-temp-canvas');
+            if (!qt) {
+                qt = document.createElement('canvas');
+                qt.id = 'q-temp-canvas';
+                qt.style.position = 'absolute';
+                qt.style.top = '0';
+                qt.style.left = '0';
+                qt.style.width = '100%';
+                qt.style.height = '100%';
+                qt.style.pointerEvents = 'none'; 
+                qt.style.zIndex = '3'; 
+                overlay.appendChild(qt);
+            }
+            
+            overlay.style.display = 'block'; 
+            
+            const w = overlay.clientWidth;
+            const h = overlay.clientHeight;
+            qBg.width = w; qBg.height = h;
+            qc.width = w;  qc.height = h;
+            qt.width = w;  qt.height = h;
+
+            activeCanvas = qc; 
+            activeCtx = qc.getContext('2d', { alpha: true }); 
+            const tempCtxQ = qt.getContext('2d', { alpha: true }); 
+
+            renderQuestionCanvas(); 
+            document.getElementById('zoom-display').innerText = Math.round(qScale * 100) + '%';
+
+            // --- DOKUNMA BAŞLADI ---
+            qc.onpointerdown = e => { 
+                if(isQPinching) return; 
+                e.preventDefault();
+                
+                if(currentTool === 'hand'){ 
+                    isPanning = true; 
+                    lastPinchCenter = {x: e.clientX, y: e.clientY}; 
+                    qc.style.cursor = 'grabbing'; 
+                    return; 
+                } 
+
+                startX = (e.clientX - qPanX) / qScale; 
+                startY = (e.clientY - qPanY) / qScale;
+                
+                const base = toolSettings[currentTool] || toolSettings['pen']; 
+                const screenSize = base.size; 
+                const worldSize = worldSizeFromZoom(screenSize, qScale); 
+                const tipForThisStroke = (currentTool === 'highlight') ? 'round' : currentTip;
+                
+                currentStroke = { 
+                    tool: currentTool, 
+                    shape: currentShape, 
+                    color: base.color, 
+                    size: worldSize, 
+                    sizeScreen: screenSize, 
+                    tip: tipForThisStroke, 
+                    points: [{x: startX, y: startY}] 
+                }; 
+                
+                if(currentTool === 'shape') { 
+                    currentStroke.startX = startX; 
+                    currentStroke.startY = startY; 
+                }
+
+                lastX = startX; 
+                lastY = startY;
+
+                isDrawing = true; 
+                qc.setPointerCapture(e.pointerId); 
+            }; 
+
+            // --- SÜRÜKLEME (POINTER MOVE) ---
+            qc.onpointermove = e => { 
+                if(isQPinching) return; 
+                e.preventDefault();
+                
+                if(isPanning){ 
+                    qPanX += e.clientX - lastPinchCenter.x; 
+                    qPanY += e.clientY - lastPinchCenter.y; 
+                    lastPinchCenter = {x: e.clientX, y: e.clientY}; 
+                    renderQuestionCanvas(); 
+                    tempCtxQ.clearRect(0, 0, qt.width, qt.height); 
+                    return; 
+                } 
+                
+                if(isDrawing){ 
+                    // -------------------------------------------------------------------------------------
+                    // COALESCED EVENTS DESTEĞİ: AKILLI TAHTA İÇİN EKLENDİ
+                    // Tarayıcının atladığı "ara" donanım eventlerini yakalayarak çizgiyi pürüzsüzleştirir.
+                    // -------------------------------------------------------------------------------------
+                    const events = (e.getCoalescedEvents) ? e.getCoalescedEvents() : [e];
+
+                    for (let ev of events) {
+                        const x = (ev.clientX - qPanX) / qScale; 
+                        const y = (ev.clientY - qPanY) / qScale; 
+                        
+                        // --- MOD 2: SORU MODUNDA ŞEKİL ÇİZERKEN CANLI GÖSTER ---
+                        if (currentTool === 'shape') { 
+                            currentStroke.endX = x; 
+                            currentStroke.endY = y;
+                            
+                            // Önce eski temp katmanını temizle
+                            tempCtxQ.setTransform(1,0,0,1,0,0);
+                            tempCtxQ.clearRect(0, 0, qt.width, qt.height);
+                            
+                            // Şekli temp katmana çiz
+                            tempCtxQ.setTransform(qScale, 0, 0, qScale, qPanX, qPanY);
+                            tempCtxQ.lineWidth = currentStroke.size;
+                            tempCtxQ.strokeStyle = currentStroke.color;
+                            tempCtxQ.beginPath();
+                            
+                            const dashVal = 15;
+                            const s = currentStroke;
+
+                            if (s.shape === 'dashed') { tempCtxQ.setLineDash([dashVal, dashVal]); tempCtxQ.moveTo(s.startX, s.startY); tempCtxQ.lineTo(s.endX, s.endY); tempCtxQ.stroke(); tempCtxQ.setLineDash([]); }
+                            else if (s.shape === 'line') { tempCtxQ.moveTo(s.startX, s.startY); tempCtxQ.lineTo(s.endX, s.endY); tempCtxQ.stroke(); } 
+                            else if (s.shape === 'arrowRight' || s.shape === 'arrowLeft' || s.shape === 'arrowDouble') { drawArrow(tempCtxQ, s.startX, s.startY, s.endX, s.endY, s.shape); }
+                            else if (s.shape === 'rect') { tempCtxQ.strokeRect(s.startX, s.startY, s.endX-s.startX, s.endY-s.startY); } 
+                            else if (s.shape === 'circle') { const r = Math.sqrt(Math.pow(s.endX-s.startX, 2) + Math.pow(s.endY-s.startY, 2)); tempCtxQ.arc(s.startX, s.startY, r, 0, 2 * Math.PI); tempCtxQ.stroke(); } 
+                            else if (s.shape === 'triangle') { tempCtxQ.moveTo(s.startX + (s.endX-s.startX)/2, s.startY); tempCtxQ.lineTo(s.startX, s.endY); tempCtxQ.lineTo(s.endX, s.endY); tempCtxQ.closePath(); tempCtxQ.stroke(); }
+                        } 
+                        else if (currentTool === 'eraser') {
+                            currentStroke.points.push({x: x, y: y});
+                            activeCtx.setTransform(qScale, 0, 0, qScale, qPanX, qPanY);
+                            activeCtx.globalCompositeOperation = 'destination-out';
+                            activeCtx.lineWidth = currentStroke.size;
+                            activeCtx.lineCap = 'round';
+                            activeCtx.lineJoin = 'round';
+                            activeCtx.beginPath();
+                            activeCtx.moveTo(lastX, lastY);
+                            activeCtx.quadraticCurveTo(lastX, lastY, (lastX + x) / 2, (lastY + y) / 2);
+                            activeCtx.stroke();
+                            activeCtx.globalCompositeOperation = 'source-over';
+                            lastX = x; lastY = y;
+                        }
+                        else { 
+                            // Kalem ve Fosforlu
+                            currentStroke.points.push({x: x, y: y}); 
+                            tempCtxQ.setTransform(qScale, 0, 0, qScale, qPanX, qPanY);
+
+                            if (currentTool === 'highlight') {
+                                tempCtxQ.setTransform(1,0,0,1,0,0);
+                                tempCtxQ.clearRect(0, 0, qt.width, qt.height);
+                                tempCtxQ.setTransform(qScale, 0, 0, qScale, qPanX, qPanY);
+                                redrawCanvas(tempCtxQ, [currentStroke], 1);
+                            } 
+                            else {
+                                // NORMAL KALEM
+                                tempCtxQ.lineWidth = currentStroke.size;
+                                tempCtxQ.strokeStyle = currentStroke.color;
+                                tempCtxQ.lineCap = (currentTip === 'round') ? 'round' : (currentTip === 'square' ? 'square' : 'butt');
+                                tempCtxQ.lineJoin = (currentTip === 'round') ? 'round' : (currentTip === 'chisel' ? 'bevel' : 'miter');
+
+                                if (currentTip === 'round') {
+                                    tempCtxQ.beginPath();
+                                    tempCtxQ.moveTo(lastX, lastY);
+                                    tempCtxQ.lineTo(x, y); 
+                                    tempCtxQ.stroke();
+                                    tempCtxQ.closePath();
+                                } else {
+                                    // Kare/Kesik Uç
+                                    const dist = Math.hypot(x - lastX, y - lastY);
+                                    const steps = Math.ceil(dist * 2); 
+                                    const op = 1.0;
+                                    for (let i = 0; i < steps; i++) { 
+                                        const t = i / steps; 
+                                        const lerpX = lastX + (x - lastX) * t; 
+                                        const lerpY = lastY + (y - lastY) * t; 
+                                        drawPointByTip(tempCtxQ, lerpX, lerpY, currentStroke.size, currentStroke.color, currentTip, op); 
+                                    }
+                                }
+                                lastX = x; lastY = y;
+                            }
+                        } 
+                    } // Döngü sonu
+                } 
+            }; 
+
+            qc.onpointerup = () => { 
+                isPanning = false; 
+                qc.style.cursor = 'crosshair'; 
+                
+                if(isDrawing){ 
+                    qStrokes.push(currentStroke); 
+                    currentStroke = null; 
+                    isDrawing = false; 
+                    
+                    tempCtxQ.setTransform(1,0,0,1,0,0);
+                    tempCtxQ.clearRect(0, 0, qt.width, qt.height);
+                    
+                    renderQuestionCanvas(); 
+                } 
+            }; 
+            
+            overlay.onwheel = function(e) { 
+                e.preventDefault(); 
+                const s = Math.exp(-e.deltaY * 0.001); 
+                const mx = e.clientX; const my = e.clientY; 
+                const wx = (mx - qPanX) / qScale; const wy = (my - qPanY) / qScale; 
+                qScale = Math.min(Math.max(qScale * s, 0.2), 3); 
+                qPanX = mx - wx * qScale; qPanY = my - wy * qScale; 
+                
+                document.getElementById('zoom-display').innerText = Math.round(qScale * 100) + '%'; 
+                tempCtxQ.setTransform(1,0,0,1,0,0);
+                tempCtxQ.clearRect(0, 0, qt.width, qt.height);
+                renderQuestionCanvas(); 
+            };
+            
+            setTool('pen'); 
+        }
+		function renderQuestionCanvas() { 
+			const bgCanvas = document.getElementById('q-bg-canvas');
+			const mainCanvas = document.getElementById('q-canvas');
+			if (!bgCanvas || !mainCanvas) return;
+
+			const bgCtx = bgCanvas.getContext('2d');
+			const mainCtx = mainCanvas.getContext('2d');
+
+			bgCtx.setTransform(1, 0, 0, 1, 0, 0); 
+			bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+			
+			bgCtx.fillStyle = '#ffffff';
+			bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+			bgCtx.translate(qPanX, qPanY); 
+			bgCtx.scale(qScale, qScale);
+			if(qBaseImage) { 
+				bgCtx.shadowBlur = 0; 
+				bgCtx.drawImage(qBaseImage, 0, 0, qBaseImage.width / SCISSOR_OVERSAMPLE, qBaseImage.height / SCISSOR_OVERSAMPLE); 
+			}
+
+			mainCtx.setTransform(1, 0, 0, 1, 0, 0); 
+			mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+			
+			mainCtx.translate(qPanX, qPanY); 
+			mainCtx.scale(qScale, qScale);
+			
+			redrawCanvas(mainCtx, qStrokes, 1);
+		}
+        function getTimestampedName(prefix, extension) {
+            const d = new Date(); const dateStr = d.toLocaleDateString('tr-TR').replace(/\./g, '-') + '_' + d.toLocaleTimeString('tr-TR').replace(/:/g, '-');
+            return `${prefix}_${dateStr}.${extension}`;
+        }
+
+        function showToast(message) {
+            const x = document.getElementById("toast-msg"); if(x) { x.innerText = message; x.className = "show"; setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000); }
+        }
+
+        function convertHexToRGBA(hex, alpha) { 
+            if(!hex) return `rgba(0,0,0,${alpha})`; let c; if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){ c=hex.substring(1).split(''); if(c.length==3) c=[c[0],c[0],c[1],c[1],c[2],c[2]]; c='0x'+c.join(''); return 'rgba('+[(c>>16)&255,(c>>8)&255,c&255].join(',')+','+alpha+')'; } return hex; 
+        }
+
+        window.downloadQuestionImage = () => {
+            if(!window.jspdf || (!qBaseImage && qStrokes.length === 0)) return;
+            const { jsPDF } = window.jspdf;
+            const imgW = qBaseImage ? qBaseImage.width  / SCISSOR_OVERSAMPLE : 0; const imgH = qBaseImage ? qBaseImage.height / SCISSOR_OVERSAMPLE : 0;
+            let minX = 0, minY = 0, maxX = imgW, maxY = imgH;
+            if (!qBaseImage && qStrokes.length > 0) { minX = Infinity; minY = Infinity; maxX = -Infinity; maxY = -Infinity; }
+            qStrokes.forEach(s => {
+                if (s.tool === 'shape') { minX = Math.min(minX, s.startX, s.endX); minY = Math.min(minY, s.startY, s.endY); maxX = Math.max(maxX, s.startX, s.endX); maxY = Math.max(maxY, s.startY, s.endY); } 
+                else if (s.points && s.points.length > 0) { s.points.forEach(p => { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); }); }
+            });
+            const padding = 15; if (minX !== Infinity) { minX -= padding; minY -= padding; maxX += padding; maxY += padding; }
+            const totalW = maxX - minX; const totalH = maxY - minY; 
+            const c = document.createElement('canvas'); const EXPORT_SCALE = 2.0; c.width = totalW * EXPORT_SCALE; c.height = totalH * EXPORT_SCALE; 
+            const ctx = c.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height); ctx.scale(EXPORT_SCALE, EXPORT_SCALE); ctx.translate(-minX, -minY);
+            if(qBaseImage) { ctx.drawImage(qBaseImage, 0, 0, imgW, imgH); } redrawCanvas(ctx, qStrokes, 1);
+            
+            const doc = new jsPDF({ orientation: totalW > totalH ? 'l' : 'p', unit: 'px', format: [totalW, totalH], hotfixes: ["px_scaling"] });
+            doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, totalW, totalH);
+            const pdfData = doc.output('datauristring'); const a = document.createElement('a'); a.href = pdfData; a.download = getTimestampedName('Cebirci_Soru', 'pdf'); document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast("Soru PDF olarak kaydedildi!");
+        };
+
+        window.closeQuestionMode = () => { document.getElementById('question-mode-overlay').style.display='none'; isQuestionMode = false; isQPinching = false; document.getElementById('zoom-display').innerText = Math.round(pz.scale * 100) + '%'; setTool('pen'); };
+
+        window.downloadAsPNG = () => { 
+            if(!window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const p = parseInt(document.getElementById('page-input').value); const w = document.getElementById('page-wrapper-' + p); if(!w) return; 
+            loadingMsg.style.display = 'block';
+            const baseW = parseFloat(w.style.width); const baseH = parseFloat(w.style.height); const m = document.createElement('canvas'); const EXPORT_SCALE = 2.0; m.width = baseW * EXPORT_SCALE; m.height = baseH * EXPORT_SCALE; const x = m.getContext('2d'); 
+            x.fillStyle = '#ffffff'; x.fillRect(0, 0, m.width, m.height); 
+            const pdfContent = w.querySelector('canvas.pdf-content'); if (pdfContent) { x.drawImage(pdfContent, 0, 0, m.width, m.height); }
+            const drawLayer = w.querySelector('.draw-layer'); if(drawLayer) { x.drawImage(drawLayer, 0, 0, m.width, m.height); }
+            try {
+                const doc = new jsPDF({ unit: 'px', format: [baseW, baseH], orientation: baseW > baseH ? 'l' : 'p', hotfixes: ["px_scaling"] });
+                doc.addImage(m.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, baseW, baseH);
+                const pdfBase64 = doc.output('datauristring'); const a = document.createElement('a'); a.href = pdfBase64; a.download = getTimestampedName('Cebirci_Sayfa', 'pdf'); document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast("Sayfa PDF olarak kaydedildi!");
+            } catch (e) { alert("Hata: " + e.message); } finally { loadingMsg.style.display = 'none'; closeAllPopups(); }
+        };
+
+        window.autoSmartSave = function() { downloadAsPDF(); };
+        
+		window.downloadAsPDF = async () => { 
+			if(!window.jspdf) return; const { jsPDF } = window.jspdf; loadingMsg.style.display = 'block'; let doc; const EXPORT_SCALE = 2.0;
+			try {
+				if (pdfDoc) {
+					for(let i=1; i<=pdfDoc.numPages; i++){ 
+						const p = await pdfDoc.getPage(i); const vp = p.getViewport({ scale: 1 }); const pw = vp.width; const ph = vp.height;
+						if (i === 1) { doc = new jsPDF({ orientation: pw > ph ? 'l' : 'p', unit: 'px', format: [pw, ph], hotfixes: ["px_scaling"] }); } else { doc.addPage([pw, ph], pw > ph ? 'l' : 'p'); }
+						const c = document.createElement('canvas'); const evp = p.getViewport({ scale: EXPORT_SCALE }); c.width = evp.width; c.height = evp.height; const ctx = c.getContext('2d'); await p.render({ canvasContext: ctx, viewport: evp }).promise; 
+						let strokes = pageStrokes[i]; if (strokes) { ctx.save(); ctx.scale(EXPORT_SCALE, EXPORT_SCALE); redrawCanvas(ctx, strokes, EXPORT_SCALE); ctx.restore(); }
+						doc.addImage(c.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, pw, ph); 
+					} 
+				}
+				const pdfBase64 = doc.output('datauristring'); const a = document.createElement('a'); a.href = pdfBase64; a.download = getTimestampedName('Cebirci_Notlar', 'pdf'); document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast("PDF başarıyla oluşturuldu!");
+			} catch(e) { console.error(e); alert("Hata oluştu: " + e.message); } finally { loadingMsg.style.display = 'none'; closeAllPopups(); }
+		};
+				
+        window.showHistory = async () => { 
+            if (isQuestionMode) return;
+            const l=document.getElementById('history-list'); l.innerHTML=''; 
+            const h=await getHistory(); h.reverse().forEach(x=>{ 
+                const d=document.createElement('div'); d.className='history-item'; d.innerHTML=`<b>${x.name}</b> <small>${x.date.toLocaleDateString()}</small>`; 
+                d.onclick=()=>{
+                    if(x.data.type && x.data.type.startsWith('image/')) { const file = new File([x.data], x.name, { type: x.data.type }); convertImageToPDFAndLoad(file); }
+                    else { fileHash=x.hash; pageStrokes={}; loadPDF(URL.createObjectURL(x.data),false); }
+                    document.getElementById('history-modal').style.display='none';
+                }; 
+                l.appendChild(d); 
+            }); 
+            document.getElementById('history-modal').style.display='flex'; closeAllPopups(); 
+        };
+
+        window.showAbout = () => { if (isQuestionMode) return; document.getElementById('about-modal').style.display='flex'; closeAllPopups(); };
+        window.resetAll = () => { if(confirm("Dikkat! Tüm ayarlar silinecek.")) { indexedDB.deleteDatabase('CebirciDB_v4'); localStorage.clear(); location.reload(); } };
+
+		window.forceDownloadExternal = function(url) {
+			var userAgent = navigator.userAgent.toLowerCase();
+			var isAndroid = userAgent.indexOf("android") > -1;
+
+			if (isAndroid) {
+				if (url.startsWith("https://")) {
+					var intentUrl = url.replace("https://", "intent://") + "#Intent;scheme=https;action=android.intent.action.VIEW;end;";
+					window.location.href = intentUrl;
+				} else {
+					window.open(url, '_system');
+				}
+			} else {
+				window.open(url, '_blank');
+			}
+		};
+
+		window.checkForUpdates = function(isManual = false) {
+			const MEVCUT_SURUM = "3.61";
+
+			const KONTROL_LINKI = "https://gist.githubusercontent.com/Cebirci68/b5cab1ef71dd6b7a3465174a3445962f/raw/cebirci_kalem.json"; 
+			
+			if(isManual) { 
+				const btn = document.querySelector('.btn-update-check'); 
+				if(btn) { 
+					const oldText = btn.innerText; 
+					btn.innerText = "Sunucuya bağlanılıyor..."; 
+					setTimeout(() => btn.innerText = oldText, 2000); 
+				} 
+			}
+			
+            // '?t=' ekleyerek önbellek sorununu (cache) önlüyoruz
+			fetch(KONTROL_LINKI + "?t=" + new Date().getTime())
+			.then(response => { if (!response.ok) throw new Error("Sunucu hatası"); return response.json(); })
+			.then(data => { 
+				if (parseFloat(data.version) > parseFloat(MEVCUT_SURUM)) { 
+					createUpdateModal(data, MEVCUT_SURUM); 
+				} else { 
+					if(isManual) alert("Sürümünüz güncel!\nMevcut Sürüm: " + MEVCUT_SURUM); 
+				} 
+			}).catch(error => { if(isManual) alert("Güncelleme sunucusuna bağlanılamadı."); });
+		};
+        // --- MOD 5: GELİŞMİŞ GÜNCELLEME EKRANI (3 BUTONLU) ---
+		function createUpdateModal(data, currentVer) { 
+			if (document.getElementById('cebirci-update-modal')) return; 
+			const modal = document.createElement('div'); modal.id = 'cebirci-update-modal'; 
+			
+			modal.innerHTML = `<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; font-family:'Segoe UI', sans-serif;">
+				<div style="background:white; padding:25px; border-radius:12px; text-align:center; width:340px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-top: 5px solid #3498db;">
+					<h2 style="color:#e74c3c; margin-top:0; margin-bottom:10px;">GÜNCELLEME VAR!</h2>
+					<div style="background:#f8f9fa; padding:10px; border-radius:6px; margin:15px 0; font-size:14px;">
+						<div style="display:flex; justify-content:space-between;">
+							<span style="color:#7f8c8d;">Mevcut Sürüm:</span>
+							<span style="font-weight:bold; color:#2c3e50;">${currentVer}</span>
+						</div>
+						<div style="display:flex; justify-content:space-between;">
+							<span style="color:#7f8c8d;">Yeni Sürüm:</span>
+							<span style="font-weight:bold; color:#27ae60;">${data.version}</span>
+						</div>
+					</div>
+					<p style="font-size:13px; color:#555; font-style:italic; margin-bottom:20px;">"${data.message}"</p>
+					
+                    <!-- PARDUS BUTONU -->
+                    <!-- data.downloadPardus değişkenini kullanıyor -->
+					<button onclick="window.forceDownloadExternal('${data.downloadPardus}')" style="display:flex; align-items:center; justify-content:center; gap:10px; width:100%; border:none; cursor:pointer; background:#34495e; color:white; padding:12px; border-radius:6px; font-weight:bold; margin-bottom:8px; transition: background 0.2s;">
+                        <svg style="width:20px;height:20px;fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        Pardus İçin İndir
+                    </button>
+
+                    <!-- WINDOWS BUTONU -->
+                    <!-- data.downloadWindows değişkenini kullanıyor -->
+                    <button onclick="window.forceDownloadExternal('${data.downloadWindows}')" style="display:flex; align-items:center; justify-content:center; gap:10px; width:100%; border:none; cursor:pointer; background:#0078d7; color:white; padding:12px; border-radius:6px; font-weight:bold; margin-bottom:8px; transition: background 0.2s;">
+                         <svg style="width:20px;height:20px;fill:white;" viewBox="0 0 24 24"><path d="M22 2L11.2 3.6v8l10.8-.1V2zM10.2 12.5L2 12.4v6.8l8.2 1.1V12.5zM2 4.8l8.2 1.1v6.2l-8.2-.1V4.8zM11.2 12.5v8.3L22 22v-9.4l-10.8-.1z"/></svg>
+                         Windows İçin İndir
+                    </button>
+
+                    <!-- ANDROID BUTONU -->
+                    <!-- data.downloadAndroid değişkenini kullanıyor -->
+                    <button onclick="window.forceDownloadExternal('${data.downloadAndroid}')" style="display:flex; align-items:center; justify-content:center; gap:10px; width:100%; border:none; cursor:pointer; background:#27ae60; color:white; padding:12px; border-radius:6px; font-weight:bold; margin-bottom:15px; transition: background 0.2s;">
+                        <svg style="width:20px;height:20px;fill:white;" viewBox="0 0 24 24"><path d="M16.6 4.34l1.37-2.38a.99.99 0 0 0-.37-1.36.99.99 0 0 0-1.36.37l-1.4 2.42A9.97 9.97 0 0 0 12 3c-1.03 0-2.02.16-2.95.45l-1.3-2.31a.99.99 0 0 0-1.36-.37.99.99 0 0 0-.37 1.36l1.37 2.37A9.95 9.95 0 0 0 2 13h20a9.95 9.95 0 0 0-5.4-8.66zM7 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm10 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-10 6v5a1 1 0 0 0 2 0v-5h6v5a1 1 0 0 0 2 0v-5a9.93 9.93 0 0 0 4.86-3H2.14A9.93 9.93 0 0 0 7 16z"/></svg>
+                        Android Apk İndir
+                    </button>
+					
+					<button onclick="document.getElementById('cebirci-update-modal').remove()" style="cursor:pointer; background:transparent; border:none; color:#95a5a6; text-decoration:underline; font-size:12px;">Şimdilik Kapat</button>
+				</div>
+			</div>`; 
+			
+			document.body.appendChild(modal); 
+		}
+
+        window.addEventListener('load', function() { setTimeout(() => { window.checkForUpdates(false); }, 3000); });
+        
+        // PWA SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').then(function(registration) {
+                    console.log('ServiceWorker başarıyla kaydedildi: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker kaydı başarısız: ', err);
+                });
+            });
+        }
+    </script>
+</div>
+</body>
+</html>
+```
+
+### 2. Dosya: manifest.json
+Bu dosyayı `kalem.html` ile aynı klasöre kaydedin.
+
+```json
+{
+  "name": "Cebirci Kalem",
+  "short_name": "Cebirci",
+  "start_url": "./kalem.html",
+  "display": "standalone",
+  "background_color": "#333333",
+  "theme_color": "#333333",
+  "orientation": "any",
+  "description": "Akıllı Tahta İçin Gelişmiş Çizim Aracı",
+  "icons": [
+    {
+      "src": "simge.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+### 3. Dosya: sw.js
+Bu dosyayı `kalem.html` ile aynı klasöre kaydedin.
+
+```javascript
+const CACHE_NAME = 'cebirci-cache-v3.61';
+const urlsToCache = [
+  './',
+  './kalem.html',
+  './manifest.json',
+  './simge.ico',
+  './pdf.min.js',
+  './pdf.worker.min.js',
+  './jspdf.umd.min.js'
+];
+
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        // Hata oluşsa bile devam et (bazı dosyalar eksik olabilir)
+        return cache.addAll(urlsToCache).catch(err => console.log('Bazı dosyalar önbelleğe alınamadı', err));
+      })
+  );
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      })
+  );
+});
