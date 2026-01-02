@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -122,10 +123,43 @@
         body.distraction-free #toggle-toolbar-btn { opacity: 1 !important; pointer-events: auto !important; }
         #toast-msg { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #27ae60; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 10001; left: 50%; bottom: 30px; font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
         #toast-msg.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+        /* --- YENİ YÜKLEME BUTONU STİLİ --- */
+        #pwa-install-banner {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            z-index: 9500 !important;
+            background-color: #27ae60; color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 2px solid white;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            font-size: 16px; font-weight: bold;
+            display: none; /* JS ile görünür yapılacak */
+            align-items: center; gap: 10px;
+            cursor: pointer;
+            animation: slideDownBanner 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        #pwa-install-banner:active { transform: translateX(-50%) scale(0.95); }
+        #pwa-install-banner svg { width: 24px; height: 24px; fill: white; }
+        @keyframes slideDownBanner { from { top: -80px; opacity: 0; } to { top: 15px; opacity: 1; } }
+        
+        .pwa-close-x {
+            margin-left: 10px; background: rgba(0,0,0,0.2); width: 24px; height: 24px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; line-height: 1;
+        }
+        .pwa-close-x:hover { background: rgba(0,0,0,0.4); }
     </style>
 
     <div id="loading-msg">Yükleniyor...</div>
 	<div id="toast-msg">Dosya İndirildi!</div>
+
+    <!-- YENİ BÜYÜK YÜKLEME BUTONU -->
+    <div id="pwa-install-banner" onclick="installPWA()">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <span>Uygulamayı Yükle</span>
+        <div class="pwa-close-x" onclick="event.stopPropagation(); document.getElementById('pwa-install-banner').style.display='none';">×</div>
+    </div>
 
     <div id="toggle-toolbar-btn" title="Araç Çubuğunu Göster">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#e6e6e6"/><path d="M8 12l4-4 4 4M8 16l4-4 4 4" stroke="#ad0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -256,15 +290,6 @@
             <button class="tool-btn" onclick="showAbout()" title="Hakkında">
                 <div class="btn-icon"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>
                 <div class="btn-text">Hakkında</div>
-            </button>
-            
-            <button class="tool-btn" id="btn-pwa-install" onclick="installPWA()" title="Uygulamayı Cihaza Yükle" style="display:none; color: #27ae60;">
-                <div class="btn-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                </div>
-                <div class="btn-text">Yükle</div>
             </button>
         </div>
         <div id="fullscreen-text-btn" onclick="toggleFullScreen()">Tam Ekran</div>
@@ -2086,7 +2111,14 @@ function openQuestionMode(imgObj) {
         };
 
         window.showAbout = () => { if (isQuestionMode) return; document.getElementById('about-modal').style.display='flex'; closeAllPopups(); };
-        window.resetAll = () => { if(confirm("Dikkat! Tüm ayarlar silinecek.")) { indexedDB.deleteDatabase('CebirciDB_v4'); localStorage.clear(); location.reload(); } };
+        window.resetAll = () => { 
+            if(confirm("Dikkat! Tüm ayarlar silinecek.")) { 
+                indexedDB.deleteDatabase('CebirciDB_v4'); 
+                localStorage.clear(); 
+                // OFFLINE DESTEĞİ İÇİN DÜZELTME:
+                window.location.href = window.location.href; 
+            } 
+        };
 
 		window.forceDownloadExternal = function(url) {
 			var userAgent = navigator.userAgent.toLowerCase();
@@ -2194,13 +2226,13 @@ function openQuestionMode(imgObj) {
         let deferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Tarayıcının otomatik mini-bilgi çubuğunu engelle (bizim butonumuz görünecek)
+            // Tarayıcının otomatik mini-bilgi çubuğunu engelle
             e.preventDefault();
-            // Olayı daha sonra tetiklemek için sakla
+            // Olayı sakla
             deferredPrompt = e;
-            // Yükle butonunu görünür yap
-            const installBtn = document.getElementById('btn-pwa-install');
-            if (installBtn) installBtn.style.display = 'flex';
+            // Yeni büyük yükleme banner'ını görünür yap
+            const installBanner = document.getElementById('pwa-install-banner');
+            if (installBanner) installBanner.style.display = 'flex';
         });
 
         async function installPWA() {
@@ -2210,18 +2242,18 @@ function openQuestionMode(imgObj) {
             // Kullanıcının ne seçtiğini bekle
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`Kullanıcı tercihi: ${outcome}`);
-            // Kabul edildiyse butonu tekrar gizle
+            // Kabul edildiyse butonu gizle
             if (outcome === 'accepted') {
-                const installBtn = document.getElementById('btn-pwa-install');
-                if (installBtn) installBtn.style.display = 'none';
+                const installBanner = document.getElementById('pwa-install-banner');
+                if (installBanner) installBanner.style.display = 'none';
             }
             deferredPrompt = null;
         }
 
-        // Uygulama zaten yüklendiyse butonu gizle
+        // Uygulama yüklendiyse butonu gizle
         window.addEventListener('appinstalled', () => {
-            const installBtn = document.getElementById('btn-pwa-install');
-            if (installBtn) installBtn.style.display = 'none';
+            const installBanner = document.getElementById('pwa-install-banner');
+            if (installBanner) installBanner.style.display = 'none';
             console.log('PWA başarıyla yüklendi');
         });
     </script>
