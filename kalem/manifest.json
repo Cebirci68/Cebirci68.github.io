@@ -1,6 +1,6 @@
 {
   "name": "Cebirci Kalem",
-  "short_name": "Cebirci",
+  "short_name":  "Cebirci Kalem",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#333333",
