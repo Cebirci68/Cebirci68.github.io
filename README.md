@@ -1,6 +1,6 @@
 # Blogger çözüm motoru dosyaları
 
-Bu klasördeki üç dosyayı GitHub deposunun kök dizinine yükleyin:
+Cebirci kelebek v7.07 için GitHub deposunun kök dizininde 7.07 klasöründe yüklü
 
 - `highs-loader.js`
 - `type-solver.js`
